@@ -92,7 +92,7 @@ const sendOrderEmails = async (order) => {
                         A new order has been successfully placed. Please check your admin dashboard for the complete details and to manage this order.
                     </p>
                     <div style="margin-top: 30px; text-align: center;">
-                        <a href="http://localhost:5173/?admin=true" style="background: #8A2BE2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 700;">View Dashboard</a>
+                        <a href="https://buss-ek-puff.vercel.app/?admin=true" style="background: #8A2BE2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 700;">View Dashboard</a>
                     </div>
                 </div>
             </div>
