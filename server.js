@@ -526,19 +526,31 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Test email endpoint (for debugging)
+// Test email endpoint (actually sends a real test email)
 app.get('/api/test-email', async (req, res) => {
     try {
+        console.log('🧪 Test email endpoint called');
         const transporter = createTransporter();
+
         await transporter.verify();
-        res.json({ success: true, message: 'SMTP connection verified successfully!' });
-    } catch (err) {
-        console.error('❌ SMTP verification failed:', err.message);
-        res.status(500).json({
-            success: false,
-            message: 'SMTP connection failed',
-            error: err.message
+        console.log('🧪 SMTP verified, now sending test email...');
+
+        const testResult = await transporter.sendMail({
+            from: `"Buss Ek Puff Test" <${process.env.EMAIL_USER}>`,
+            to: process.env.ADMIN_EMAIL,
+            subject: '🧪 Test Email - Buss Ek Puff',
+            html: `<div style="padding:20px;font-family:sans-serif;">
+                <h2>✅ Email is working!</h2>
+                <p>This is a test email from your Vercel serverless function.</p>
+                <p>Time: ${new Date().toISOString()}</p>
+            </div>`
         });
+
+        console.log('🧪 Test email sent:', testResult.messageId);
+        res.json({ success: true, message: 'Test email sent!', messageId: testResult.messageId });
+    } catch (err) {
+        console.error('❌ Test email failed:', err.message);
+        res.status(500).json({ success: false, message: 'Email failed', error: err.message });
     }
 });
 
