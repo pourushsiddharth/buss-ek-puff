@@ -118,6 +118,13 @@ const Hero = () => {
                             transition={{ delay: 0.8 }}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                                const targetId = currentSlide === 0 ? 'vape-carousel' : 'hookah-carousel';
+                                const element = document.getElementById(targetId);
+                                if (element) {
+                                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }}
                             className="hero-btn"
                             style={{
                                 backgroundColor: 'var(--primary)',
@@ -127,7 +134,8 @@ const Hero = () => {
                                 fontSize: '0.9rem',
                                 letterSpacing: '2px',
                                 borderRadius: '2px',
-                                transition: 'var(--transition)'
+                                transition: 'var(--transition)',
+                                cursor: 'pointer'
                             }}
                         >
                             {slides[currentSlide].cta}

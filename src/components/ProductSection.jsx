@@ -62,17 +62,22 @@ const products = [
     }
 ];
 
-const ProductSection = () => {
-    const [activeIdx, setActiveIdx] = useState(0);
+const ProductSection = ({ onProductView }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
 
-    const next = () => setActiveIdx((prev) => (prev + 1) % products.length);
-    const prev = () => setActiveIdx((prev) => (prev - 1 + products.length) % products.length);
+    const nextProduct = () => {
+        setCurrentIndex((prev) => (prev + 1) % products.length);
+    };
 
-    const activeProduct = products[activeIdx];
+    const prevProduct = () => {
+        setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
+    };
+
+    const current = products[currentIndex];
 
     return (
         <section
-            id="product-section"
+            id="vape-carousel"
             style={{
                 minHeight: '100vh',
                 width: '100%',
@@ -139,7 +144,7 @@ const ProductSection = () => {
             {/* Background Image with Overlay */}
             <AnimatePresence mode="wait">
                 <motion.div
-                    key={activeIdx}
+                    key={currentIndex}
                     initial={{ opacity: 0, scale: 1.1 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
@@ -150,7 +155,7 @@ const ProductSection = () => {
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%), url(${activeProduct.bgImage})`,
+                        backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%), url(${current.bgImage})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
@@ -189,18 +194,18 @@ const ProductSection = () => {
                         <img src={elfbarLogo} alt="Elf Bar" style={{ height: '14px', filter: 'brightness(0) invert(1)' }} />
                     </motion.div>
                     <motion.div
-                        key={`loc-${activeIdx}`}
+                        key={`loc-${currentIndex}`}
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', marginBottom: '1rem' }}
                     >
                         <MapPin size={16} color="#8b5cf6" />
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600, letterSpacing: '2px' }}>{activeProduct.subtitle}</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600, letterSpacing: '2px' }}>{current.subtitle}</span>
                     </motion.div>
 
                     <motion.h2
-                        key={`name-${activeIdx}`}
+                        key={`name-${currentIndex}`}
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
@@ -214,7 +219,7 @@ const ProductSection = () => {
                             textTransform: 'uppercase'
                         }}
                     >
-                        {activeProduct.name.split(' ').map((word, i) => (
+                        {current.name.split(' ').map((word, i) => (
                             <React.Fragment key={i}>
                                 {word}<br />
                             </React.Fragment>
@@ -222,13 +227,13 @@ const ProductSection = () => {
                     </motion.h2>
 
                     <motion.p
-                        key={`desc-${activeIdx}`}
+                        key={`desc-${currentIndex}`}
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.6 }}
                         style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '3rem', maxWidth: '450px' }}
                     >
-                        {activeProduct.description}
+                        {current.description}
                     </motion.p>
 
                     <motion.div
@@ -236,30 +241,20 @@ const ProductSection = () => {
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.8 }}
                         className="product-actions"
-                        style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}
                     >
-                        <button style={{
-                            flexShrink: 0,
-                            backgroundColor: '#ff00ea',
-                            width: '50px',
-                            height: '50px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: '0 0 20px rgba(255, 0, 234, 0.4)'
-                        }}>
-                            <Play fill="white" size={18} color="white" />
-                        </button>
-                        <button className="glass" style={{
-                            padding: '1rem 2rem',
-                            borderRadius: '2rem',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '0.8rem',
-                            letterSpacing: '1px'
-                        }}>
-                            DISCOVER PRODUCT
+                        <button
+                            onClick={() => onProductView && onProductView(`v${current.id}`)}
+                            className="glass"
+                            style={{
+                                padding: '1rem 2rem',
+                                borderRadius: '2rem',
+                                color: 'white',
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                letterSpacing: '1px',
+                                cursor: 'pointer'
+                            }}>
+                            VIEW DETAILS
                         </button>
                     </motion.div>
                 </div>
@@ -275,14 +270,14 @@ const ProductSection = () => {
                     overflowX: 'visible',
                     paddingRight: '5%'
                 }}>
-                    {products.slice(activeIdx + 1, activeIdx + 4).concat(products.slice(0, Math.max(0, (activeIdx + 4) - products.length))).map((product, i) => (
+                    {products.slice(currentIndex + 1, currentIndex + 4).concat(products.slice(0, Math.max(0, (currentIndex + 4) - products.length))).map((product, i) => (
                         <motion.div
                             key={product.id}
                             layoutId={`card-${product.id}`}
                             initial={{ x: 100, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: i * 0.1 }}
-                            onClick={() => setActiveIdx(products.findIndex(p => p.id === product.id))}
+                            onClick={() => setCurrentIndex(products.findIndex(p => p.id === product.id))}
                             style={{
                                 flex: '0 0 220px',
                                 height: '300px',
@@ -322,16 +317,16 @@ const ProductSection = () => {
                     justifyContent: 'space-between'
                 }}>
                     <div className="nav-controls" style={{ display: 'flex', gap: '1rem' }}>
-                        <button onClick={prev} className="glass" style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+                        <button onClick={prevProduct} className="glass" style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
                             <ChevronLeft size={20} />
                         </button>
-                        <button onClick={next} className="glass" style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+                        <button onClick={nextProduct} className="glass" style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
                             <ChevronRight size={20} />
                         </button>
                     </div>
 
                     <div style={{ color: 'white', fontSize: '2rem', fontWeight: 800, opacity: 0.6 }}>
-                        {(activeIdx + 1).toString().padStart(2, '0')}
+                        {(currentIndex + 1).toString().padStart(2, '0')}
                     </div>
                 </div>
             </div>

@@ -66,7 +66,7 @@ const Navbar = ({ onNavigate }) => {
                 </style>
                 <div className="desktop-links" style={{ display: 'none', gap: '2.5rem', alignItems: 'center' }}>
                     <a onClick={() => onNavigate('home')} className="nav-link">PRODUCTS</a>
-                    <a onClick={() => onNavigate('home')} className="nav-link">COLLECTIONS</a>
+                    <a href="#mirrors" className="nav-link">MIRRORS</a>
                     <a onClick={() => onNavigate('contact')} className="nav-link">CONTACT</a>
                     <div style={{ height: '20px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
                     <Search size={18} className="nav-link" />
@@ -103,7 +103,7 @@ const Navbar = ({ onNavigate }) => {
                         }}
                     >
                         <a onClick={() => { onNavigate('home'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>PRODUCTS</a>
-                        <a onClick={() => { onNavigate('home'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>COLLECTIONS</a>
+                        <a href="#mirrors" onClick={() => setIsMobileMenuOpen(false)} className="nav-link" style={{ fontSize: '1.5rem' }}>MIRRORS</a>
                         <a onClick={() => { onNavigate('contact'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>CONTACT</a>
                         <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
                             <Search size={24} className="nav-link" />
