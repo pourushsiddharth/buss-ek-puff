@@ -4,14 +4,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import hero1Img from '../assets/hero1.png';
 import hero2Img from '../assets/hero2.png';
 
-const slides = [
+const defaultSlides = [
     {
         id: 1,
         title: "PREMIUM VAPE",
         subtitle: "EXPERIENCE THE FUTURE",
         description: "Discover our exclusive collection of high-end vapes. Crafted for those who appreciate the finer things in life.",
         image: hero1Img,
-        cta: "EXPLORE COLLECTION"
+        cta: "EXPLORE COLLECTION",
+        link: 'vape-carousel'
     },
     {
         id: 2,
@@ -19,27 +20,77 @@ const slides = [
         subtitle: "EXQUISITE GLASSWARE",
         description: "Premium glass bases for your hookah collection. Artisan-crafted for clarity, durability, and a refined smoking experience.",
         image: hero2Img,
-        cta: "SHOP BASES"
+        cta: "SHOP BASES",
+        link: 'mirrors'
     }
 ];
 
 const Hero = () => {
+    const [slides, setSlides] = useState(defaultSlides);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFeaturedProducts = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/products');
+                if (response.ok) {
+                    const data = await response.json();
+                    const featured = (data.products || []).filter(p => p.is_featured);
+
+                    const dynamicSlides = featured.map(p => {
+                        const getDynamicImageUrl = (path) => {
+                            if (!path) return '';
+                            if (path.startsWith('http')) return path;
+                            if (path.startsWith('/uploads')) return `http://localhost:3001${path}`;
+                            return `/src/assets/${path}`;
+                        };
+
+                        return {
+                            id: p.id,
+                            title: p.title,
+                            subtitle: p.category,
+                            description: p.description,
+                            image: getDynamicImageUrl(p.cover_image_path || p.bg_path),
+                            cta: "VIEW PRODUCT",
+                            productId: p.id,
+                            isProduct: true,
+                            type: p.type
+                        };
+                    });
+
+                    setSlides([...defaultSlides, ...dynamicSlides]);
+                }
+            } catch (err) {
+                console.error('Error fetching featured products:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFeaturedProducts();
+    }, []);
 
     const nextSlide = () => {
+        if (slides.length === 0) return;
         setCurrentSlide((prev) => (prev + 1) % slides.length);
     };
 
     const prevSlide = () => {
+        if (slides.length === 0) return;
         setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     };
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            nextSlide();
-        }, 5000);
-        return () => clearInterval(timer);
-    }, []);
+        if (slides.length > 1) {
+            const timer = setInterval(() => {
+                nextSlide();
+            }, 5000);
+            return () => clearInterval(timer);
+        }
+    }, [slides.length]);
+
+    const activeSlide = slides[currentSlide];
 
     return (
         <section id="hero-section" style={{ height: '100vh', width: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -63,99 +114,138 @@ const Hero = () => {
                 `}
             </style>
             <AnimatePresence mode="wait">
-                <motion.div
-                    className="hero-slide"
-                    key={currentSlide}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1 }}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%), url(${slides[currentSlide].image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '0 10%'
-                    }}
-                >
-                    <div className="hero-content" style={{ maxWidth: '600px' }}>
-                        <motion.span
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            style={{ color: '#8b5cf6', fontWeight: 600, letterSpacing: '4px', fontSize: '0.9rem', marginBottom: '1rem', display: 'block' }}
-                        >
-                            {slides[currentSlide].subtitle}
-                        </motion.span>
+                {activeSlide && (
+                    <motion.div
+                        className="hero-slide"
+                        key={currentSlide}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1 }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundImage: activeSlide.isProduct
+                                ? `linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%), url(${activeSlide.image})`
+                                : `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%), url(${activeSlide.image})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '0 10%'
+                        }}
+                    >
+                        <div className="hero-content" style={{ maxWidth: '600px', zIndex: 2 }}>
+                            <motion.span
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                style={{ color: '#8b5cf6', fontWeight: 600, letterSpacing: '4px', fontSize: '0.9rem', marginBottom: '1rem', display: 'block' }}
+                            >
+                                {activeSlide.subtitle}
+                            </motion.span>
 
-                        <motion.h1
-                            initial={{ y: 30, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            style={{ fontSize: 'clamp(3rem, 8vw, 5rem)', fontWeight: 800, lineHeight: 1, marginBottom: '1.5rem', letterSpacing: '-2px' }}
-                        >
-                            {slides[currentSlide].title}
-                        </motion.h1>
+                            <motion.h1
+                                initial={{ y: 30, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                style={{ fontSize: 'clamp(3rem, 8vw, 5rem)', fontWeight: 800, lineHeight: 1, marginBottom: '1.5rem', letterSpacing: '-2px' }}
+                            >
+                                {activeSlide.title}
+                            </motion.h1>
 
-                        <motion.p
-                            initial={{ y: 30, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                            style={{ color: 'var(--secondary)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2.5rem', maxWidth: '500px' }}
-                        >
-                            {slides[currentSlide].description}
-                        </motion.p>
+                            <motion.p
+                                initial={{ y: 30, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.6 }}
+                                style={{ color: 'var(--secondary)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2.5rem', maxWidth: '500px' }}
+                            >
+                                {activeSlide.description}
+                            </motion.p>
 
-                        <motion.button
-                            initial={{ y: 30, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.8 }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                                const targetId = currentSlide === 0 ? 'vape-carousel' : 'hookah-carousel';
-                                const element = document.getElementById(targetId);
-                                if (element) {
-                                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                }
-                            }}
-                            className="hero-btn"
-                            style={{
-                                backgroundColor: 'var(--primary)',
-                                color: 'black',
-                                padding: '1.2rem 3rem',
-                                fontWeight: 700,
-                                fontSize: '0.9rem',
-                                letterSpacing: '2px',
-                                borderRadius: '2px',
-                                transition: 'var(--transition)',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            {slides[currentSlide].cta}
-                        </motion.button>
-                    </div>
-                </motion.div>
+                            <motion.button
+                                initial={{ y: 30, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.8 }}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                    if (activeSlide.link) {
+                                        const element = document.getElementById(activeSlide.link);
+                                        if (element) element.scrollIntoView({ behavior: 'smooth' });
+                                    } else if (activeSlide.productId) {
+                                        const targetId = activeSlide.type === 'Hookah' ? 'mirrors' : 'vape-carousel';
+                                        const element = document.getElementById(targetId);
+                                        if (element) element.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }}
+                                className="hero-btn"
+                                style={{
+                                    backgroundColor: 'var(--primary)',
+                                    color: 'black',
+                                    padding: '1.2rem 3rem',
+                                    fontWeight: 700,
+                                    fontSize: '0.9rem',
+                                    letterSpacing: '2px',
+                                    borderRadius: '2px',
+                                    transition: 'var(--transition)',
+                                    cursor: 'pointer',
+                                    border: 'none'
+                                }}
+                            >
+                                {activeSlide.cta}
+                            </motion.button>
+                        </div>
+
+                        {activeSlide.isProduct && activeSlide.image && (
+                            <motion.div
+                                initial={{ x: 100, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.5, duration: 0.8 }}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10%',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    width: '40%',
+                                    height: '60%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    zIndex: 1
+                                }}
+                            >
+                                <img
+                                    src={activeSlide.image}
+                                    alt={activeSlide.title}
+                                    style={{
+                                        maxHeight: '100%',
+                                        maxWidth: '100%',
+                                        objectFit: 'contain',
+                                        filter: 'drop-shadow(0 20px 50px rgba(138, 43, 226, 0.5))'
+                                    }}
+                                />
+                            </motion.div>
+                        )}
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             {/* Navigation Controls */}
-            <div className="hero-controls" style={{ position: 'absolute', bottom: '10%', right: '10%', display: 'flex', gap: '2rem' }}>
-                <button onClick={prevSlide} className="glass" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+            <div className="hero-controls" style={{ position: 'absolute', bottom: '10%', right: '10%', display: 'flex', gap: '2rem', zIndex: 10 }}>
+                <button onClick={prevSlide} className="glass" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
                     <ChevronLeft size={24} />
                 </button>
-                <button onClick={nextSlide} className="glass" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+                <button onClick={nextSlide} className="glass" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
                     <ChevronRight size={24} />
                 </button>
             </div>
 
             {/* Progress Indicator */}
-            <div className="hero-progress" style={{ position: 'absolute', bottom: 50, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '10px' }}>
+            <div className="hero-progress" style={{ position: 'absolute', bottom: 50, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '10px', zIndex: 10 }}>
                 {slides.map((_, index) => (
                     <div
                         key={index}

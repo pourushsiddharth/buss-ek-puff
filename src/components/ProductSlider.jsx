@@ -4,11 +4,35 @@ import { ChevronLeft, ChevronRight, Play, ShoppingCart, Search, Menu } from 'luc
 import { allProducts } from '../data/products';
 
 const ProductSlider = ({ onProductView }) => {
+    const [products, setProducts] = useState([]);
     const [activeIdx, setActiveIdx] = useState(0);
-    const active = allProducts[activeIdx];
+    const [loading, setLoading] = useState(true);
 
-    const next = () => setActiveIdx((prev) => (prev + 1) % allProducts.length);
-    const prev = () => setActiveIdx((prev) => (prev - 1 + allProducts.length) % allProducts.length);
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/products');
+                if (response.ok) {
+                    const data = await response.json();
+                    setProducts(data.products);
+                }
+            } catch (err) {
+                console.error('Error fetching products:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProducts();
+    }, []);
+
+    const active = products[activeIdx];
+
+    const next = () => setActiveIdx((prev) => (prev + 1) % products.length);
+    const prev = () => setActiveIdx((prev) => (prev - 1 + products.length) % products.length);
+
+
+    if (loading) return null;
+    if (products.length === 0) return null;
 
     return (
         <section style={{

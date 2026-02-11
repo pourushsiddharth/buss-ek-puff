@@ -1,10 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, MessageCircle } from 'lucide-react';
 import contactBg from '../assets/contactus_bg.png';
 import './Contact.css';
 
 const Contact = () => {
+    const whatsappNumber = '919334807758';
+    const whatsappMessage = 'Hi! I would like to know more about your products.';
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
     return (
         <section className="contact-section" style={{
             backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%), url(${contactBg})`,
@@ -45,7 +49,7 @@ const Contact = () => {
                             </div>
                             <div>
                                 <div className="contact-item-label">CALL US</div>
-                                <div className="contact-item-value">+1 (555) 123-4567</div>
+                                <div className="contact-item-value">+91 93348 07758</div>
                             </div>
                         </div>
 
@@ -56,6 +60,31 @@ const Contact = () => {
                             <div>
                                 <div className="contact-item-label">VISIT US</div>
                                 <div className="contact-item-value">Downtown Luxury St, NY 10001</div>
+                            </div>
+                        </div>
+
+                        <div className="contact-item">
+                            <div className="glass contact-icon-wrapper" style={{ background: 'rgba(37, 211, 102, 0.1)' }}>
+                                <MessageCircle size={20} color="#25D366" />
+                            </div>
+                            <div>
+                                <div className="contact-item-label">WHATSAPP</div>
+                                <a
+                                    href={whatsappLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="contact-item-value"
+                                    style={{
+                                        color: '#25D366',
+                                        textDecoration: 'none',
+                                        transition: 'opacity 0.3s ease',
+                                        cursor: 'pointer'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.opacity = '0.7'}
+                                    onMouseLeave={(e) => e.target.style.opacity = '1'}
+                                >
+                                    Chat with us
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -106,6 +135,37 @@ const Contact = () => {
                     </form>
                 </motion.div>
             </div>
+
+            {/* Floating WhatsApp Button */}
+            <motion.a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1, duration: 0.5, type: "spring" }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 10px 30px rgba(37, 211, 102, 0.4)',
+                    cursor: 'pointer',
+                    zIndex: 1000,
+                    border: 'none',
+                    textDecoration: 'none'
+                }}
+            >
+                <MessageCircle size={28} color="white" />
+            </motion.a>
         </section>
     );
 };

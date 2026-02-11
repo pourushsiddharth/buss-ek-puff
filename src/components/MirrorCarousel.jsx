@@ -93,7 +93,7 @@ const MirrorCarousel = ({ onProductView }) => {
 
     return (
         <section
-            id="hookah-carousel"
+            id="mirrors"
             style={{
                 minHeight: '100vh',
                 width: '100%',
@@ -140,14 +140,14 @@ const MirrorCarousel = ({ onProductView }) => {
                         pointer-events: none;
                     }
                     @media (max-width: 1024px) {
-                        #hookah-carousel .content-grid {
+                        #mirrors .content-grid {
                             grid-template-columns: 1fr !important;
                             gap: 3rem !important;
                         }
-                        #hookah-carousel .glass-card {
+                        #mirrors .glass-card {
                             order: 2;
                         }
-                        #hookah-carousel .image-container {
+                        #mirrors .image-container {
                             order: 1;
                         }
                     }

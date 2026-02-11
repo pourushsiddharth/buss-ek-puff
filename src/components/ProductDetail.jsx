@@ -1,20 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ShoppingCart, Star, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import { allProducts } from '../data/products';
-import contactusBg from '../assets/contactus_bg.png';
+import { ArrowLeft, ShoppingCart, Star, Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
-const ProductDetail = ({ product, onBack, onProductView }) => {
-    // Use provided product or default to first product
-    const displayProduct = product || allProducts[0];
+const ProductDetail = ({ productId, onBack, onProductView }) => {
+    const { addToCart, setIsCartOpen } = useCart();
+    const [displayProduct, setDisplayProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [recommendedProducts, setRecommendedProducts] = useState([]);
 
-    // Generate recommendations (exclude current product)
-    const recommendedProducts = allProducts
-        .filter(p => p.id !== displayProduct.id)
-        .slice(0, 4);
-    const whatsappNumber = '1234567890'; // Replace with actual WhatsApp number
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/products');
+                if (response.ok) {
+                    const data = await response.json();
+                    const product = data.products.find(p => p.id === parseInt(productId) || p.product_id === productId);
+                    setDisplayProduct(product);
+
+                    if (product) {
+                        setRecommendedProducts(data.products
+                            .filter(p => p.id !== product.id && p.type === product.type)
+                            .slice(0, 4));
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching product details:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [productId]);
+
+    if (loading) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', color: 'white' }}>
+                <RefreshCw className="animate-spin" size={48} />
+            </div>
+        );
+    }
+
+    if (!displayProduct) return <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>Product not found.</div>;
+
+    const whatsappNumber = '919334807758';
     const whatsappMessage = `Hi! I'm interested in ordering ${displayProduct.title}`;
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
 
     return (
         <section style={{
@@ -360,33 +392,90 @@ const ProductDetail = ({ product, onBack, onProductView }) => {
                                 </div>
                             </motion.div>
 
-                            {/* WhatsApp Order Button */}
-                            <motion.a
+                            {/* Action Buttons */}
+                            <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.9 }}
-                                href={whatsappLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="whatsapp-btn"
                                 style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                    padding: '1.2rem 3rem',
-                                    borderRadius: '3rem',
-                                    color: 'white',
-                                    fontWeight: 700,
-                                    fontSize: '1.1rem',
-                                    textDecoration: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    letterSpacing: '0.5px'
+                                    display: 'flex',
+                                    gap: '1.5rem',
+                                    flexWrap: 'wrap'
                                 }}
                             >
-                                <ShoppingCart size={22} />
-                                Order on WhatsApp
-                            </motion.a>
+                                {/* Add to Cart Button */}
+                                <button
+                                    onClick={() => {
+                                        addToCart(displayProduct);
+                                        setIsCartOpen(true);
+                                    }}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        padding: '1.2rem 3rem',
+                                        borderRadius: '3rem',
+                                        background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
+                                        color: 'white',
+                                        fontWeight: 700,
+                                        fontSize: '1.1rem',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        letterSpacing: '1px',
+                                        boxShadow: '0 10px 30px rgba(138, 43, 226, 0.4)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.transform = 'translateY(-2px)';
+                                        e.target.style.boxShadow = '0 15px 40px rgba(138, 43, 226, 0.6)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.transform = 'translateY(0)';
+                                        e.target.style.boxShadow = '0 10px 30px rgba(138, 43, 226, 0.4)';
+                                    }}
+                                >
+                                    <ShoppingCart size={22} />
+                                    Add to Cart
+                                </button>
+
+                                {/* WhatsApp Order Button */}
+                                <a
+                                    href={whatsappLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        padding: '1.2rem 3rem',
+                                        borderRadius: '3rem',
+                                        background: 'rgba(37, 211, 102, 0.1)',
+                                        border: '2px solid #25D366',
+                                        color: '#25D366',
+                                        fontWeight: 700,
+                                        fontSize: '1.1rem',
+                                        textDecoration: 'none',
+                                        cursor: 'pointer',
+                                        letterSpacing: '1px',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.background = '#25D366';
+                                        e.target.style.color = 'white';
+                                        e.target.style.transform = 'translateY(-2px)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.background = 'rgba(37, 211, 102, 0.1)';
+                                        e.target.style.color = '#25D366';
+                                        e.target.style.transform = 'translateY(0)';
+                                    }}
+                                >
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                    </svg>
+                                    WhatsApp
+                                </a>
+                            </motion.div>
                         </div>
                     </div>
 
@@ -468,7 +557,7 @@ const ProductDetail = ({ product, onBack, onProductView }) => {
                         textTransform: 'uppercase',
                         letterSpacing: '1px'
                     }}>
-                        You May Also Like
+                        Other {displayProduct.type === 'Hookah' ? 'Hookahs' : 'Vapes'} You May Like
                     </h3>
 
                     <div className="recommendations-scroll" style={{

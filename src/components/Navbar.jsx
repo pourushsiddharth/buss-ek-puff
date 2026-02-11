@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Menu, X, Search } from 'lucide-react';
+import { ShoppingCart, Menu, X } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 import logoImg from '../assets/logo.png';
 
 const Navbar = ({ onNavigate }) => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { getCartCount, setIsCartOpen } = useCart();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -41,7 +43,6 @@ const Navbar = ({ onNavigate }) => {
                 <a href="#vapes" style={{ fontWeight: 500, opacity: 0.8 }}>VAPES</a>
                 <a href="#mirrors" style={{ fontWeight: 500, opacity: 0.8 }}>MIRRORS</a>
                 <a href="#about" style={{ fontWeight: 500, opacity: 0.8 }}>OUR STORY</a>
-                <Search size={20} style={{ opacity: 0.8, cursor: 'pointer' }} />
                 <ShoppingCart size={20} style={{ opacity: 0.8, cursor: 'pointer' }} />
             </div>
 
@@ -65,12 +66,37 @@ const Navbar = ({ onNavigate }) => {
           `}
                 </style>
                 <div className="desktop-links" style={{ display: 'none', gap: '2.5rem', alignItems: 'center' }}>
-                    <a onClick={() => onNavigate('home')} className="nav-link">PRODUCTS</a>
-                    <a href="#mirrors" className="nav-link">MIRRORS</a>
+                    <a onClick={() => onNavigate('products')} className="nav-link">PRODUCTS</a>
+                    <a onClick={() => onNavigate('home', 'mirrors')} className="nav-link">MIRRORS</a>
+                    <a onClick={() => onNavigate('about')} className="nav-link">ABOUT US</a>
                     <a onClick={() => onNavigate('contact')} className="nav-link">CONTACT</a>
                     <div style={{ height: '20px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
-                    <Search size={18} className="nav-link" />
-                    <ShoppingCart size={18} className="nav-link" />
+                    <div
+                        onClick={() => setIsCartOpen(true)}
+                        style={{ position: 'relative', cursor: 'pointer' }}
+                        className="nav-link"
+                    >
+                        <ShoppingCart size={18} />
+                        {getCartCount() > 0 && (
+                            <span style={{
+                                position: 'absolute',
+                                top: '-8px',
+                                right: '-8px',
+                                background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
+                                color: 'white',
+                                borderRadius: '50%',
+                                width: '18px',
+                                height: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.7rem',
+                                fontWeight: 700
+                            }}>
+                                {getCartCount()}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <div className="mobile-toggle" style={{ zIndex: 1101 }} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -102,11 +128,11 @@ const Navbar = ({ onNavigate }) => {
                             gap: '2rem'
                         }}
                     >
-                        <a onClick={() => { onNavigate('home'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>PRODUCTS</a>
-                        <a href="#mirrors" onClick={() => setIsMobileMenuOpen(false)} className="nav-link" style={{ fontSize: '1.5rem' }}>MIRRORS</a>
+                        <a onClick={() => { onNavigate('products'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>PRODUCTS</a>
+                        <a onClick={() => { onNavigate('home', 'mirrors'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>MIRRORS</a>
+                        <a onClick={() => { onNavigate('about'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>ABOUT US</a>
                         <a onClick={() => { onNavigate('contact'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>CONTACT</a>
                         <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
-                            <Search size={24} className="nav-link" />
                             <ShoppingCart size={24} className="nav-link" />
                         </div>
                     </motion.div>
