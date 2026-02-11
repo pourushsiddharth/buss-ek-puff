@@ -208,6 +208,7 @@ app.post('/api/submitOrder', async (req, res) => {
         }
     });
 
+    let dbClosed = false;
     try {
         const {
             orderNumber,
@@ -273,15 +274,27 @@ app.post('/api/submitOrder', async (req, res) => {
 
         console.log('✅ Order created in DB:', order.order_number);
 
-        // Send email and wait for it to finish to catch errors
-        await sendOrderEmails(order, req);
+        // Close DB connection FIRST to free resources before email
+        await client.end();
+        dbClosed = true;
+
+        // Send emails (must await on serverless - background tasks get killed)
+        let emailSent = false;
+        try {
+            await sendOrderEmails(order, req);
+            emailSent = true;
+            console.log('✅ Emails sent successfully for order:', order.order_number);
+        } catch (emailErr) {
+            console.error('❌ Email sending failed:', emailErr.message);
+        }
 
         // Return success response
         return res.status(201).json({
             success: true,
             message: 'Order placed successfully',
             orderNumber: order.order_number,
-            orderId: order.id
+            orderId: order.id,
+            emailSent
         });
 
     } catch (error) {
@@ -298,7 +311,9 @@ app.post('/api/submitOrder', async (req, res) => {
         });
 
     } finally {
-        await client.end();
+        if (!dbClosed) {
+            await client.end();
+        }
     }
 });
 
