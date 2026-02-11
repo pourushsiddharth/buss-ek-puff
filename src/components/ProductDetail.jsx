@@ -16,7 +16,26 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                 const response = await fetch(`${API_URL}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
-                    const product = data.products.find(p => p.id === parseInt(productId) || p.product_id === productId);
+                    const product = data.products.find(p => String(p.id) === String(productId));
+
+                    // Create a helper to resolve image path
+                    if (product) {
+                        const getImageUrl = (path) => {
+                            if (!path) return '';
+                            if (path.startsWith('http') || path.startsWith('/')) return path;
+                            return `/assets/${path}`;
+                        };
+
+                        // Normalize product data from DB
+                        product.image = getImageUrl(product.image_path || product.image);
+                        product.bg = getImageUrl(product.bg_path || product.bg);
+
+                        // Fix recommended products too if they lack image handling
+                        data.products.forEach(p => {
+                            p.image = getImageUrl(p.image_path || p.image);
+                        });
+                    }
+
                     setDisplayProduct(product);
 
                     if (product) {

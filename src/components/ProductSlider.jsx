@@ -15,7 +15,21 @@ const ProductSlider = ({ onProductView }) => {
                 const response = await fetch(`${API_URL}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
-                    setProducts(data.products);
+
+                    // Create a helper to resolve image path
+                    const getImageUrl = (path) => {
+                        if (!path) return '';
+                        if (path.startsWith('http') || path.startsWith('/')) return path;
+                        return `/assets/${path}`;
+                    };
+
+                    const processedProducts = data.products.map(p => ({
+                        ...p,
+                        image: getImageUrl(p.image_path || p.image),
+                        bg: getImageUrl(p.bg_path || p.bg)
+                    }));
+
+                    setProducts(processedProducts);
                 }
             } catch (err) {
                 console.error('Error fetching products:', err);
