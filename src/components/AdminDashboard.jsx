@@ -26,6 +26,7 @@ import {
     XCircle,
     Star
 } from 'lucide-react';
+import API_URL from '../config';
 
 const AdminDashboard = ({ onBack }) => {
     const [orders, setOrders] = useState([]);
@@ -70,7 +71,7 @@ const AdminDashboard = ({ onBack }) => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/api/products');
+            const response = await fetch(`${API_URL}/api/products`);
             if (response.ok) {
                 const data = await response.json();
                 setProducts(data.products);
@@ -88,7 +89,7 @@ const AdminDashboard = ({ onBack }) => {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/api/orders');
+            const response = await fetch(`${API_URL}/api/orders`);
             if (!response.ok) throw new Error('Failed to fetch orders');
             const data = await response.json();
             setOrders(data.orders);
@@ -104,7 +105,7 @@ const AdminDashboard = ({ onBack }) => {
     const updateOrderStatus = async (orderNumber, newStatus) => {
         setIsUpdating(true);
         try {
-            const response = await fetch(`http://localhost:3001/api/orders/${orderNumber}/status`, {
+            const response = await fetch(`${API_URL}/api/orders/${orderNumber}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -169,7 +170,7 @@ const AdminDashboard = ({ onBack }) => {
     const handleDeleteProduct = async (id) => {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
         try {
-            const response = await fetch(`http://localhost:3001/api/products/${id}`, {
+            const response = await fetch(`${API_URL}/api/products/${id}`, {
                 method: 'DELETE'
             });
             if (response.ok) {
@@ -183,8 +184,8 @@ const AdminDashboard = ({ onBack }) => {
     const handleProductSubmit = async (e) => {
         e.preventDefault();
         const url = editingProduct
-            ? `http://localhost:3001/api/products/${editingProduct.id}`
-            : 'http://localhost:3001/api/products';
+            ? `${API_URL}/api/products/${editingProduct.id}`
+            : `${API_URL}/api/products`;
         const method = editingProduct ? 'PUT' : 'POST';
 
         try {
@@ -425,7 +426,7 @@ const AdminDashboard = ({ onBack }) => {
             formData.append('image', file);
 
             try {
-                const response = await fetch('http://localhost:3001/api/upload', {
+                const response = await fetch(`${API_URL}/api/upload`, {
                     method: 'POST',
                     body: formData,
                 });
@@ -447,7 +448,7 @@ const AdminDashboard = ({ onBack }) => {
         const getPreviewUrl = (path) => {
             if (!path) return null;
             if (path.startsWith('http')) return path;
-            if (path.startsWith('/uploads')) return `http://localhost:3001${path}`;
+            if (path.startsWith('/uploads')) return `${API_URL}${path}`;
             // For existing assets in src/assets/ that are just filenames
             return `/src/assets/${path}`;
         };

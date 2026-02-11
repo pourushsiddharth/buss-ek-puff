@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
+import API_URL from '../config';
+
 const AdminLogin = ({ onLogin, onBack }) => {
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +16,7 @@ const AdminLogin = ({ onLogin, onBack }) => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:3001/api/login', {
+            const response = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

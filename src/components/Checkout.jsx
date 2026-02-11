@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag, User, Mail, Phone, CheckCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import API_URL from '../config';
 
 const Checkout = ({ onBack }) => {
     const { cart, getCartTotal, clearCart } = useCart();
@@ -72,7 +73,7 @@ const Checkout = ({ onBack }) => {
             };
 
             // Submit order to API
-            const response = await fetch('http://localhost:3001/api/submitOrder', {
+            const response = await fetch(`${API_URL}/api/submitOrder`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -121,7 +122,7 @@ const Checkout = ({ onBack }) => {
             };
 
             // Submit to DB first
-            await fetch('http://localhost:3001/api/submitOrder', {
+            await fetch(`${API_URL}/api/submitOrder`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)

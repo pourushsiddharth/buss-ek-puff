@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Play, ShoppingCart, Search, Menu } from 'lucide-react';
 import { allProducts } from '../data/products';
+import API_URL from '../config';
 
 const ProductSlider = ({ onProductView }) => {
     const [products, setProducts] = useState([]);
@@ -11,7 +12,7 @@ const ProductSlider = ({ onProductView }) => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/products');
+                const response = await fetch(`${API_URL}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
                     setProducts(data.products);

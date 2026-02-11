@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import hero1Img from '../assets/hero1.png';
 import hero2Img from '../assets/hero2.png';
+import API_URL from '../config';
 
 const defaultSlides = [
     {
@@ -33,7 +34,7 @@ const Hero = () => {
     useEffect(() => {
         const fetchFeaturedProducts = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/products');
+                const response = await fetch(`${API_URL}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
                     const featured = (data.products || []).filter(p => p.is_featured);
@@ -42,7 +43,7 @@ const Hero = () => {
                         const getDynamicImageUrl = (path) => {
                             if (!path) return '';
                             if (path.startsWith('http')) return path;
-                            if (path.startsWith('/uploads')) return `http://localhost:3001${path}`;
+                            if (path.startsWith('/uploads')) return `${API_URL}${path}`;
                             return `/src/assets/${path}`;
                         };
 

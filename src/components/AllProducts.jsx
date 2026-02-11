@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Filter, X, Search, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import API_URL from '../config';
 
 const AllProducts = ({ onProductView }) => {
     const [products, setProducts] = useState([]);
@@ -14,7 +15,7 @@ const AllProducts = ({ onProductView }) => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/products');
+                const response = await fetch(`${API_URL}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
                     setProducts(data.products);

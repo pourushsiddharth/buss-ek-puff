@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingCart, Star, Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import API_URL from '../config';
 
 const ProductDetail = ({ productId, onBack, onProductView }) => {
     const { addToCart, setIsCartOpen } = useCart();
@@ -12,7 +13,7 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/products');
+                const response = await fetch(`${API_URL}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
                     const product = data.products.find(p => p.id === parseInt(productId) || p.product_id === productId);
