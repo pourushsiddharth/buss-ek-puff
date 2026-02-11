@@ -120,7 +120,7 @@ const MirrorCarousel = ({ onProductView }) => {
                         z-index: 10;
                     }
                     #mirrors .mirror-heading {
-                        font-size: clamp(3rem, 8vw, 5rem);
+                        font-size: clamp(4rem, 12vw, 9rem);
                         font-weight: 900;
                         line-height: 1;
                         background: linear-gradient(to bottom, #fff 0%, #a0a0a0 100%);
@@ -128,6 +128,7 @@ const MirrorCarousel = ({ onProductView }) => {
                         -webkit-text-fill-color: transparent;
                         margin-bottom: 2rem;
                         text-transform: uppercase;
+                        letter-spacing: -2px;
                     }
                     #mirrors .accent-bg {
                         position: absolute;
@@ -166,7 +167,14 @@ const MirrorCarousel = ({ onProductView }) => {
                         >
                             EXCLUSIVE COLLECTION
                         </motion.span>
-                        <h2 style={{ fontSize: '3rem', fontWeight: 800, color: 'white' }}>ELITE MIRROR SERIES</h2>
+                        <h2 style={{
+                            fontSize: 'clamp(3rem, 8vw, 6rem)',
+                            fontWeight: 900,
+                            color: 'white',
+                            lineHeight: 1.1,
+                            letterSpacing: '-2px',
+                            textTransform: 'uppercase'
+                        }}>ELITE MIRROR SERIES</h2>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <button onClick={prev} className="glass" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
@@ -189,15 +197,15 @@ const MirrorCarousel = ({ onProductView }) => {
                                 transition={{ duration: 0.5 }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                    <div style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: 600 }}>EDITION {activeMirror.id.toString().padStart(2, '0')}</span>
+                                    <div style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1rem', fontWeight: 700, letterSpacing: '2px' }}>EDITION {activeMirror.id.toString().padStart(2, '0')}</span>
                                     </div>
                                     <div style={{ height: '1px', flex: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.1), transparent)' }} />
                                 </div>
                                 <h3 className="mirror-heading">{activeMirror.name}</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                    <Zap size={18} color="var(--accent)" />
-                                    <span style={{ color: 'white', fontWeight: 700, letterSpacing: '2px', fontSize: '1rem' }}>{activeMirror.subtitle}</span>
+                                    <Zap size={32} color="var(--accent)" />
+                                    <span style={{ color: 'white', fontWeight: 800, letterSpacing: '3px', fontSize: '2.5rem' }}>{activeMirror.subtitle}</span>
                                 </div>
                                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.2rem', lineHeight: 1.6, marginBottom: '3rem', maxWidth: '500px' }}>
                                     {activeMirror.description}
