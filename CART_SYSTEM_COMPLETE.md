@@ -73,7 +73,7 @@ Runs on: http://localhost:5173
 ```bash
 node server.js
 ```
-Runs on: http://localhost:3001
+Runs on: https://buss-ek-puff.vercel.app/
 
 ### Test the Cart System
 

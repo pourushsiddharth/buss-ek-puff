@@ -1,16 +1,16 @@
 # Production API Connection Fix
 
 ## Problem
-The website was failing to connect to the backend on the live site because the API URL was hardcoded to `http://localhost:3001`, which only works on your local machine.
+The website was failing to connect to the backend on the live site because the API URL was hardcoded to `https://buss-ek-puff.vercel.app/`, which only works on your local machine.
 
 ## Solution Implemented
 1.  **Created `src/config.js`**:
     -   Centralized API URL configuration.
     -   It uses `import.meta.env.VITE_API_URL` if available (for production).
-    -   Falls back to `http://localhost:3001` for local development.
+    -   Falls back to `https://buss-ek-puff.vercel.app/` for local development.
 
 2.  **Updated All Components**:
-    -   Replaced all hardcoded `http://localhost:3001` instances with the dynamic `API_URL` import in:
+    -   Replaced all hardcoded `https://buss-ek-puff.vercel.app/` instances with the dynamic `API_URL` import in:
         -   `AdminLogin.jsx`
         -   `AdminDashboard.jsx`
         -   `ProductSlider.jsx`
