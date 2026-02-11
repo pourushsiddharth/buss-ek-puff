@@ -45,7 +45,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendOrderEmails = async (order) => {
+const sendOrderEmails = async (order, req) => {
     if (!process.env.EMAIL_USER || !process.env.ADMIN_EMAIL) {
         console.log('⚠️ Email settings not configured in .env. Skipping notification.');
         return;
@@ -72,6 +72,11 @@ const sendOrderEmails = async (order) => {
         </div>
     `).join('') : '<p>No items found</p>';
 
+    // Determine base URL dynamically from request using referer or origin
+    const baseUrl = req.get('origin') || req.get('referer') || process.env.FRONTEND_URL || 'http://localhost:5173';
+    // Remove trailing slash if present
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
     // 1. Admin Email Options
     const adminMailOptions = {
         from: `"Buss Ek Puff Orders" <${process.env.EMAIL_USER}>`,
@@ -92,7 +97,7 @@ const sendOrderEmails = async (order) => {
                         A new order has been successfully placed. Please check your admin dashboard for the complete details and to manage this order.
                     </p>
                     <div style="margin-top: 30px; text-align: center;">
-                        <a href="https://buss-ek-puff.vercel.app/?admin=true" style="background: #8A2BE2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 700;">View Dashboard</a>
+                        <a href="${cleanBaseUrl}/?admin=true" style="background: #8A2BE2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 700;">View Dashboard</a>
                     </div>
                 </div>
             </div>
@@ -231,7 +236,7 @@ app.post('/api/submitOrder', async (req, res) => {
         console.log('✅ Order created in DB:', order.order_number);
 
         // Send email and wait for it to finish to catch errors
-        await sendOrderEmails(order);
+        await sendOrderEmails(order, req);
 
         // Return success response
         return res.status(201).json({
