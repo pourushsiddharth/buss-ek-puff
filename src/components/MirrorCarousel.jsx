@@ -139,9 +139,15 @@ const MirrorCarousel = ({ onProductView }) => {
                         pointer-events: none;
                     }
                     @media (max-width: 1024px) {
-                        #mirrors .content-grid {
+                        #hookah-carousel .content-grid {
                             grid-template-columns: 1fr !important;
                             gap: 3rem !important;
+                        }
+                        #hookah-carousel .glass-card {
+                            order: 2;
+                        }
+                        #hookah-carousel .image-container {
+                            order: 1;
                         }
                     }
                 `}
@@ -223,7 +229,7 @@ const MirrorCarousel = ({ onProductView }) => {
                         </AnimatePresence>
                     </div>
 
-                    <div style={{ position: 'relative', height: '600px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="image-container" style={{ position: 'relative', height: '600px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeIdx}
