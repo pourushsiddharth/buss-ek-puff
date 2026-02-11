@@ -473,11 +473,15 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`\n🚀 API Server running on http://localhost:${PORT}`);
-    console.log(`📡 Endpoints:`);
-    console.log(`   POST   http://localhost:${PORT}/api/submitOrder`);
-    console.log(`   GET    http://localhost:${PORT}/api/orders`);
-    console.log(`   PATCH  http://localhost:${PORT}/api/orders/:orderNumber/status`);
-    console.log(`   GET    http://localhost:${PORT}/api/health\n`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`\n🚀 API Server running on http://localhost:${PORT}`);
+        console.log(`📡 Endpoints:`);
+        console.log(`   POST   http://localhost:${PORT}/api/submitOrder`);
+        console.log(`   GET    http://localhost:${PORT}/api/orders`);
+        console.log(`   PATCH  http://localhost:${PORT}/api/orders/:orderNumber/status`);
+        console.log(`   GET    http://localhost:${PORT}/api/health\n`);
+    });
+}
+
+export default app;
