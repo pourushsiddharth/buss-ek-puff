@@ -229,6 +229,17 @@ const AdminDashboard = ({ onBack }) => {
         return matchesSearch && matchesStatus;
     });
 
+    const filteredProducts = products.filter(product => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (
+            product.title.toLowerCase().includes(term) ||
+            product.category.toLowerCase().includes(term) ||
+            product.type.toLowerCase().includes(term) ||
+            product.price.toLowerCase().includes(term)
+        );
+    });
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending': return '#FFA500';
@@ -614,7 +625,7 @@ const AdminDashboard = ({ onBack }) => {
                     <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                     <input
                         type="text"
-                        placeholder="Search by order #, name or email..."
+                        placeholder={view === 'orders' ? "Search by order #, name or email..." : "Search by product name, category..."}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.75rem', color: 'white' }}
@@ -716,14 +727,14 @@ const AdminDashboard = ({ onBack }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {products.length === 0 ? (
+                            {filteredProducts.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
                                         No products found.
                                     </td>
                                 </tr>
                             ) : (
-                                products.map(product => (
+                                filteredProducts.map(product => (
                                     <tr key={product.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }}>
                                         <td style={{ padding: '1.2rem 1.5rem' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
