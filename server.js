@@ -201,6 +201,7 @@ const sendOrderEmails = async (order, req) => {
 
 // Submit Order Endpoint
 app.post('/api/submitOrder', async (req, res) => {
+    console.error('🔵 [submitOrder] Endpoint hit');
     const client = new Client({
         connectionString: process.env.DATABASE_URL,
         ssl: {
@@ -209,6 +210,8 @@ app.post('/api/submitOrder', async (req, res) => {
     });
 
     let dbClosed = false;
+    let emailSent = false;
+    let emailError = null;
     try {
         const {
             orderNumber,
@@ -242,6 +245,7 @@ app.post('/api/submitOrder', async (req, res) => {
 
         // Connect to database
         await client.connect();
+        console.error('🔵 [submitOrder] DB connected');
 
         // Insert order into database
         const query = `
@@ -272,29 +276,33 @@ app.post('/api/submitOrder', async (req, res) => {
         const result = await client.query(query, values);
         const order = result.rows[0];
 
-        console.log('✅ Order created in DB:', order.order_number);
+        console.error('🔵 [submitOrder] Order created:', order.order_number);
 
         // Close DB connection FIRST to free resources before email
         await client.end();
         dbClosed = true;
+        console.error('🔵 [submitOrder] DB closed, sending emails...');
 
         // Send emails (must await on serverless - background tasks get killed)
-        let emailSent = false;
         try {
             await sendOrderEmails(order, req);
             emailSent = true;
-            console.log('✅ Emails sent successfully for order:', order.order_number);
+            console.error('🔵 [submitOrder] ✅ Emails sent!');
         } catch (emailErr) {
-            console.error('❌ Email sending failed:', emailErr.message);
+            emailError = emailErr.message;
+            console.error('🔵 [submitOrder] ❌ Email failed:', emailErr.message);
+            console.error('🔵 [submitOrder] ❌ Stack:', emailErr.stack);
         }
 
         // Return success response
+        console.error('🔵 [submitOrder] Returning response, emailSent:', emailSent);
         return res.status(201).json({
             success: true,
             message: 'Order placed successfully',
             orderNumber: order.order_number,
             orderId: order.id,
-            emailSent
+            emailSent,
+            emailError
         });
 
     } catch (error) {
