@@ -7,6 +7,8 @@ import nodemailer from 'nodemailer';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,15 +24,37 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Multer Storage Configuration
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Multer Storage Configuration
+let storage;
+
+if (process.env.NODE_ENV === 'production') {
+    // Use Cloudinary for production
+    storage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'buss-ek-puff',
+            allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+        },
+    });
+} else {
+    // Use Local Disk for development
+    storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, 'public/uploads/');
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+}
 
 const upload = multer({ storage: storage });
 
@@ -466,10 +490,15 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    // If using Cloudinary, path is the full URL
+    // If using Local, path is accessible via /uploads/filename
+    const imageUrl = req.file.path || `/uploads/${req.file.filename}`;
+
     res.json({
         success: true,
-        imageUrl: `/uploads/${req.file.filename}`,
-        filename: req.file.filename
+        imageUrl: imageUrl,
+        filename: req.file.filename || req.file.originalname
     });
 });
 
