@@ -58,16 +58,27 @@ if (process.env.NODE_ENV === 'production') {
 
 const upload = multer({ storage: storage });
 
-// Transporter for emails
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_PORT == 465,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
+// Create a fresh transporter for each email send (avoids stale connections in serverless)
+const createTransporter = () => {
+    console.log('📧 Creating email transporter with:', {
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        user: process.env.EMAIL_USER ? '✅ Set' : '❌ Missing',
+        pass: process.env.EMAIL_PASS ? '✅ Set' : '❌ Missing',
+    });
+    return nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_PORT) || 465,
+        secure: (parseInt(process.env.EMAIL_PORT) || 465) === 465,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+    });
+};
 
 const sendOrderEmails = async (order, req) => {
     if (!process.env.EMAIL_USER || !process.env.ADMIN_EMAIL) {
@@ -173,6 +184,7 @@ const sendOrderEmails = async (order, req) => {
     };
 
     try {
+        const transporter = createTransporter();
         console.log(`📧 Attempting to send emails for order #${order.order_number}...`);
         // Send to Admin
         await transporter.sendMail(adminMailOptions);
@@ -182,7 +194,8 @@ const sendOrderEmails = async (order, req) => {
         await transporter.sendMail(customerMailOptions);
         console.log(`📧 Thank you mail sent to Customer (${order.customer_email})`);
     } catch (err) {
-        console.error('❌ Failed to send emails:', err);
+        console.error('❌ Failed to send emails:', err.message);
+        console.error('❌ Full error:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 };
 
@@ -483,7 +496,35 @@ app.post('/api/login', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'API server is running' });
+    res.json({
+        status: 'OK',
+        message: 'API server is running',
+        env: {
+            EMAIL_HOST: process.env.EMAIL_HOST ? '✅' : '❌',
+            EMAIL_PORT: process.env.EMAIL_PORT ? '✅' : '❌',
+            EMAIL_USER: process.env.EMAIL_USER ? '✅' : '❌',
+            EMAIL_PASS: process.env.EMAIL_PASS ? '✅' : '❌',
+            ADMIN_EMAIL: process.env.ADMIN_EMAIL ? '✅' : '❌',
+            DATABASE_URL: process.env.DATABASE_URL ? '✅' : '❌',
+            NODE_ENV: process.env.NODE_ENV || 'not set',
+        }
+    });
+});
+
+// Test email endpoint (for debugging)
+app.get('/api/test-email', async (req, res) => {
+    try {
+        const transporter = createTransporter();
+        await transporter.verify();
+        res.json({ success: true, message: 'SMTP connection verified successfully!' });
+    } catch (err) {
+        console.error('❌ SMTP verification failed:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'SMTP connection failed',
+            error: err.message
+        });
+    }
 });
 
 // Image Upload Endpoint
