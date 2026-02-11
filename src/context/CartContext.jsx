@@ -31,20 +31,33 @@ export const CartProvider = ({ children }) => {
         localStorage.setItem('bussekpuff_cart', JSON.stringify(cart));
     }, [cart]);
 
+    // Helper to resolve image path from database filenames
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http') || path.startsWith('/') || path.startsWith('data:')) return path;
+        return `/assets/${path}`;
+    };
+
     const addToCart = (product) => {
+        // Normalize image path before adding to cart
+        const normalizedProduct = {
+            ...product,
+            image: getImageUrl(product.image_path || product.image),
+        };
+
         setCart(prevCart => {
-            const existingItem = prevCart.find(item => item.id === product.id);
+            const existingItem = prevCart.find(item => item.id === normalizedProduct.id);
 
             if (existingItem) {
                 // Update quantity if item already exists
                 return prevCart.map(item =>
-                    item.id === product.id
+                    item.id === normalizedProduct.id
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
             } else {
                 // Add new item with quantity 1
-                return [...prevCart, { ...product, quantity: 1 }];
+                return [...prevCart, { ...normalizedProduct, quantity: 1 }];
             }
         });
     };
