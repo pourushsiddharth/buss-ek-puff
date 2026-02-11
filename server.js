@@ -97,7 +97,8 @@ const sendOrderEmails = async (order, req) => {
     `).join('') : '<p>No items found</p>';
 
     // Determine base URL dynamically from request using referer or origin
-    const baseUrl = req.get('origin') || req.get('referer') || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const defaultUrl = process.env.NODE_ENV === 'production' ? 'https://buss-ek-puff.vercel.app' : 'http://localhost:5173';
+    const baseUrl = req.get('origin') || req.get('referer') || process.env.FRONTEND_URL || defaultUrl;
     // Remove trailing slash if present
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
 
