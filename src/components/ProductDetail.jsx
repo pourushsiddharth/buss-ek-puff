@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingCart, Star, Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import API_URL from '../config';
+import contactusBg from '../assets/contactus_bg.png';
 
 const ProductDetail = ({ productId, onBack, onProductView }) => {
     const { addToCart, setIsCartOpen } = useCart();
