@@ -59,6 +59,8 @@ const AdminDashboard = ({ onBack }) => {
         features: [],
         specifications: {}
     });
+    const [newFeature, setNewFeature] = useState('');
+    const [newSpec, setNewSpec] = useState({ key: '', value: '' });
 
     useEffect(() => {
         if (view === 'orders') {
@@ -134,7 +136,7 @@ const AdminDashboard = ({ onBack }) => {
     const handleAddProduct = () => {
         setEditingProduct(null);
         setProductFormData({
-            product_id: 'v' + Date.now(),
+            product_id: 'v' + Math.random().toString(36).substr(2, 7),
             title: '',
             category: 'PREMIUM VAPE',
             price: '₹2,499',
@@ -1050,29 +1052,58 @@ const AdminDashboard = ({ onBack }) => {
                                                 />
                                             </div>
                                         ))}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const feat = window.prompt('Enter new feature:');
-                                                if (feat) {
-                                                    setProductFormData({
-                                                        ...productFormData,
-                                                        features: [...(productFormData.features || []), feat]
-                                                    });
-                                                }
-                                            }}
-                                            style={{
-                                                padding: '0.5rem 1rem',
-                                                backgroundColor: 'rgba(255,255,255,0.05)',
-                                                border: '1px dashed rgba(255,255,255,0.2)',
-                                                borderRadius: '2rem',
-                                                color: 'rgba(255,255,255,0.6)',
-                                                cursor: 'pointer',
-                                                fontSize: '0.85rem'
-                                            }}
-                                        >
-                                            + Add Feature
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', width: '100%' }}>
+                                            <input
+                                                type="text"
+                                                value={newFeature}
+                                                onChange={(e) => setNewFeature(e.target.value)}
+                                                placeholder="Enter new feature..."
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '0.8rem 1.2rem',
+                                                    backgroundColor: 'rgba(255,255,255,0.05)',
+                                                    border: '1px solid rgba(255,255,255,0.1)',
+                                                    borderRadius: '0.8rem',
+                                                    color: 'white',
+                                                    outline: 'none'
+                                                }}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (newFeature.trim()) {
+                                                            setProductFormData({
+                                                                ...productFormData,
+                                                                features: [...(productFormData.features || []), newFeature.trim()]
+                                                            });
+                                                            setNewFeature('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (newFeature.trim()) {
+                                                        setProductFormData({
+                                                            ...productFormData,
+                                                            features: [...(productFormData.features || []), newFeature.trim()]
+                                                        });
+                                                        setNewFeature('');
+                                                    }
+                                                }}
+                                                style={{
+                                                    padding: '0.8rem 1.5rem',
+                                                    backgroundColor: '#8A2BE2',
+                                                    border: 'none',
+                                                    borderRadius: '0.8rem',
+                                                    color: 'white',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1110,42 +1141,66 @@ const AdminDashboard = ({ onBack }) => {
                                                 </button>
                                             </div>
                                         ))}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const key = window.prompt('Enter specification name (e.g. Battery):');
-                                                if (!key) return;
-                                                const value = window.prompt(`Enter value for ${key}:`);
-                                                if (value) {
-                                                    setProductFormData({
-                                                        ...productFormData,
-                                                        specifications: {
-                                                            ...(productFormData.specifications || {}),
-                                                            [key]: value
-                                                        }
-                                                    });
-                                                }
-                                            }}
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                padding: '1.5rem',
-                                                backgroundColor: 'rgba(138, 43, 226, 0.02)',
-                                                border: '1px dashed rgba(138, 43, 226, 0.3)',
-                                                borderRadius: '1.25rem',
-                                                color: '#8A2BE2',
-                                                cursor: 'pointer',
-                                                fontSize: '0.9rem',
-                                                fontWeight: 600,
-                                                gap: '0.5rem',
-                                                transition: 'all 0.3s'
-                                            }}
-                                        >
-                                            <Plus size={20} />
-                                            Add Specification
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', width: '100%', alignItems: 'center' }}>
+                                            <input
+                                                type="text"
+                                                value={newSpec.key}
+                                                onChange={(e) => setNewSpec({ ...newSpec, key: e.target.value })}
+                                                placeholder="Spec Name (e.g. Battery)"
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '0.8rem 1.2rem',
+                                                    backgroundColor: 'rgba(255,255,255,0.05)',
+                                                    border: '1px solid rgba(255,255,255,0.1)',
+                                                    borderRadius: '0.8rem',
+                                                    color: 'white',
+                                                    outline: 'none'
+                                                }}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={newSpec.value}
+                                                onChange={(e) => setNewSpec({ ...newSpec, value: e.target.value })}
+                                                placeholder="Value (e.g. 5000mAh)"
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '0.8rem 1.2rem',
+                                                    backgroundColor: 'rgba(255,255,255,0.05)',
+                                                    border: '1px solid rgba(255,255,255,0.1)',
+                                                    borderRadius: '0.8rem',
+                                                    color: 'white',
+                                                    outline: 'none'
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (newSpec.key.trim() && newSpec.value.trim()) {
+                                                        setProductFormData({
+                                                            ...productFormData,
+                                                            specifications: {
+                                                                ...(productFormData.specifications || {}),
+                                                                [newSpec.key.trim()]: newSpec.value.trim()
+                                                            }
+                                                        });
+                                                        setNewSpec({ key: '', value: '' });
+                                                    }
+                                                }}
+                                                style={{
+                                                    padding: '0.8rem',
+                                                    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+                                                    border: '1px solid rgba(138, 43, 226, 0.3)',
+                                                    borderRadius: '0.8rem',
+                                                    color: '#8A2BE2',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                <Plus size={20} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
