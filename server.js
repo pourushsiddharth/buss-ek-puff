@@ -422,7 +422,10 @@ async function runMigrations() {
     try {
         await client.connect();
         await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]';`);
-        console.log('✅ DB migration: gallery_images column ready');
+        await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_out_of_stock BOOLEAN DEFAULT false;`);
+        await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;`);
+        await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS cover_image_path VARCHAR(255);`);
+        console.log('✅ DB migration: gallery_images and missing columns ready');
 
         // Create accessories table if it doesn't exist
         await client.query(`

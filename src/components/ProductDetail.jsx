@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import API_URL from '../config';
 import contactusBg from '../assets/contactus_bg.png';
 import { allProducts } from '../data/products';
+import LoadingScreen from './LoadingScreen';
 
 const ProductDetail = ({ productId, onBack, onProductView }) => {
     const { addToCart, setIsCartOpen } = useCart();
@@ -94,31 +95,8 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
         fetchData();
     }, [productId]);
 
-    if (loading) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#000',
-                color: 'white',
-                gap: '1rem'
-            }}>
-                <img
-                    src="/assets/loading.gif"
-                    alt="Loading..."
-                    style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'contain',
-                        opacity: 0.8
-                    }}
-                />
-            </div>
-        );
-    }
+    if (loading) return <LoadingScreen />;
+
 
     if (!displayProduct) return <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>Product not found.</div>;
 

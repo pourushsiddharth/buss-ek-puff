@@ -28,6 +28,7 @@ import {
     Wrench
 } from 'lucide-react';
 import API_URL from '../config';
+import LoadingScreen from './LoadingScreen';
 
 const MaterialInput = ({ label, value, onChange, placeholder, type = 'text', multiline = false, rows = 3, required = false }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -312,6 +313,7 @@ const AdminDashboard = ({ onBack }) => {
     const [products, setProducts] = useState([]);
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [isSavingProduct, setIsSavingProduct] = useState(false);
     const [productFormData, setProductFormData] = useState({
         product_id: '',
         title: '',
@@ -337,6 +339,7 @@ const AdminDashboard = ({ onBack }) => {
     const [accessories, setAccessories] = useState([]);
     const [isAccessoryModalOpen, setIsAccessoryModalOpen] = useState(false);
     const [editingAccessory, setEditingAccessory] = useState(null);
+    const [isSavingAccessory, setIsSavingAccessory] = useState(false);
     const [accessoryFormData, setAccessoryFormData] = useState({
         name: '', category: 'Coils', price: '', original_price: '', description: '', image_url: '', is_available: true
     });
@@ -408,18 +411,26 @@ const AdminDashboard = ({ onBack }) => {
         e.preventDefault();
         const url = editingAccessory ? `${API_URL}/api/accessories/${editingAccessory.id}` : `${API_URL}/api/accessories`;
         const method = editingAccessory ? 'PUT' : 'POST';
+        setIsSavingAccessory(true);
         try {
             const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accessoryFormData) });
-            if (response.ok) {
-                const data = await response.json();
+            const data = await response.json();
+            if (response.ok && data.success) {
                 if (editingAccessory) {
                     setAccessories(accessories.map(a => a.id === editingAccessory.id ? data.accessory : a));
                 } else {
                     setAccessories([data.accessory, ...accessories]);
                 }
                 setIsAccessoryModalOpen(false);
+            } else {
+                alert('Error: ' + (data.error || data.message || 'Failed to save accessory'));
             }
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error(err);
+            alert('Network error: Could not reach server. Make sure the backend is running.');
+        } finally {
+            setIsSavingAccessory(false);
+        }
     };
 
 
@@ -529,27 +540,37 @@ const AdminDashboard = ({ onBack }) => {
             : `${API_URL}/api/products`;
         const method = editingProduct ? 'PUT' : 'POST';
 
+        setIsSavingProduct(true);
         try {
+            const payload = {
+                ...productFormData,
+                id: editingProduct ? editingProduct.id : productFormData.product_id,
+                features: Array.isArray(productFormData.features) ? productFormData.features : [],
+                variations: Array.isArray(productFormData.variations) ? productFormData.variations : [],
+                gallery_images: Array.isArray(productFormData.gallery_images) ? productFormData.gallery_images : [],
+            };
             const response = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...productFormData,
-                    id: editingProduct ? editingProduct.id : productFormData.product_id
-                })
+                body: JSON.stringify(payload)
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            const data = await response.json();
+            if (response.ok && data.success) {
                 if (editingProduct) {
                     setProducts(products.map(p => p.id === editingProduct.id ? data.product : p));
                 } else {
                     setProducts([data.product, ...products]);
                 }
                 setIsProductModalOpen(false);
+            } else {
+                alert('Error: ' + (data.error || data.message || 'Failed to save product'));
             }
         } catch (err) {
             console.error('Error saving product:', err);
+            alert('Network error: Could not reach server. Make sure the backend is running.');
+        } finally {
+            setIsSavingProduct(false);
         }
     };
 
@@ -597,31 +618,7 @@ const AdminDashboard = ({ onBack }) => {
 
 
 
-    if (loading && orders.length === 0) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#000',
-                color: 'white',
-                flexDirection: 'column',
-                gap: '1rem'
-            }}>
-                <img
-                    src="/assets/loading.gif"
-                    alt="Loading..."
-                    style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'contain',
-                        opacity: 0.8
-                    }}
-                />
-            </div>
-        );
-    }
+    if (loading && orders.length === 0) return <LoadingScreen />;
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#050505', color: 'white', padding: '100px 5% 50px', fontFamily: '"Outfit", sans-serif' }}>
@@ -1457,24 +1454,28 @@ const AdminDashboard = ({ onBack }) => {
                                     </button>
                                     <button
                                         type="submit"
+                                        disabled={isSavingProduct}
                                         style={{
                                             flex: 2,
                                             padding: '1.2rem',
-                                            background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
+                                            background: isSavingProduct ? 'rgba(138, 43, 226, 0.5)' : 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
                                             border: 'none',
                                             borderRadius: '1.2rem',
                                             color: 'white',
                                             fontWeight: 800,
                                             fontSize: '1rem',
-                                            cursor: 'pointer',
+                                            cursor: isSavingProduct ? 'not-allowed' : 'pointer',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '0.75rem',
-                                            boxShadow: '0 10px 20px rgba(138, 43, 226, 0.3)'
+                                            boxShadow: '0 10px 20px rgba(138, 43, 226, 0.3)',
+                                            transition: 'all 0.3s'
                                         }}
                                     >
-                                        <Save size={20} /> {editingProduct ? 'Update Product' : 'Create Product'}
+                                        <RefreshCw size={20} className={isSavingProduct ? 'animate-spin' : ''} style={{ display: isSavingProduct ? 'block' : 'none' }} />
+                                        <Save size={20} style={{ display: isSavingProduct ? 'none' : 'block' }} />
+                                        {isSavingProduct ? 'Saving...' : (editingProduct ? 'Update Product' : 'Create Product')}
                                     </button>
                                 </div>
                             </form>
@@ -1542,8 +1543,10 @@ const AdminDashboard = ({ onBack }) => {
                                 </div>
                                 <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
                                     <button type="button" onClick={() => setIsAccessoryModalOpen(false)} style={{ flex: 1, padding: '1.2rem', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1.2rem', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                                    <button type="submit" style={{ flex: 2, padding: '1.2rem', background: 'linear-gradient(135deg, #4ADE80 0%, #22C55E 100%)', border: 'none', borderRadius: '1.2rem', color: '#000', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: '0 10px 20px rgba(74,222,128,0.25)' }}>
-                                        <Save size={20} /> {editingAccessory ? 'Update Accessory' : 'Save Accessory'}
+                                    <button type="submit" disabled={isSavingAccessory} style={{ flex: 2, padding: '1.2rem', background: isSavingAccessory ? 'rgba(74,222,128,0.4)' : 'linear-gradient(135deg, #4ADE80 0%, #22C55E 100%)', border: 'none', borderRadius: '1.2rem', color: '#000', fontWeight: 800, fontSize: '1rem', cursor: isSavingAccessory ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: '0 10px 20px rgba(74,222,128,0.25)', transition: 'all 0.3s' }}>
+                                        <RefreshCw size={20} className={isSavingAccessory ? 'animate-spin' : ''} style={{ display: isSavingAccessory ? 'block' : 'none' }} />
+                                        <Save size={20} style={{ display: isSavingAccessory ? 'none' : 'block' }} />
+                                        {isSavingAccessory ? 'Saving...' : (editingAccessory ? 'Update Accessory' : 'Save Accessory')}
                                     </button>
                                 </div>
                             </form>

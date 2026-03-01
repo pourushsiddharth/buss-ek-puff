@@ -4,6 +4,7 @@ import { Star, Filter, X, Search, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import API_URL from '../config';
 import { allProducts } from '../data/products';
+import LoadingScreen from './LoadingScreen';
 
 const AllProducts = ({ onProductView }) => {
     const [products, setProducts] = useState([]);
@@ -80,31 +81,8 @@ const AllProducts = ({ onProductView }) => {
         }
     });
 
-    if (loading) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#000',
-                color: 'white',
-                flexDirection: 'column',
-                gap: '1rem'
-            }}>
-                <img
-                    src="/assets/loading.gif"
-                    alt="Loading..."
-                    style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'contain',
-                        opacity: 0.8
-                    }}
-                />
-            </div>
-        );
-    }
+    if (loading) return <LoadingScreen />;
+
 
     return (
         <section style={{

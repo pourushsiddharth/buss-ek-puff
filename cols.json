@@ -1,0 +1,19 @@
+[
+  "rating",
+  "reviews",
+  "features",
+  "specifications",
+  "variations",
+  "created_at",
+  "updated_at",
+  "gallery_images",
+  "type",
+  "image_path",
+  "title",
+  "category",
+  "price",
+  "original_price",
+  "description",
+  "id",
+  "bg_path"
+]
