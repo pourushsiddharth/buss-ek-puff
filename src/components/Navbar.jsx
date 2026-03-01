@@ -1,21 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { ShoppingCart, Menu, X, Wrench } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import logoImg from '../assets/logo.png';
+import API_URL from '../config';
 
 const Navbar = ({ onNavigate }) => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [hasAccessories, setHasAccessories] = useState(false);
     const { getCartCount, setIsCartOpen } = useCart();
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
-        };
+        const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Auto-show Accessories nav link as soon as the first accessory is added in admin
+    useEffect(() => {
+        const checkAccessories = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/accessories`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setHasAccessories(data.accessories && data.accessories.length > 0);
+                }
+            } catch {
+                // silently fail — don't block navbar rendering
+            }
+        };
+        checkAccessories();
+        // Re-check every 60s in case admin adds one while user is browsing
+        const interval = setInterval(checkAccessories, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleAccessoriesClick = () => {
+        onNavigate('home', 'accessories');
+        setIsMobileMenuOpen(false);
+    };
 
     return (
         <nav
@@ -39,43 +63,65 @@ const Navbar = ({ onNavigate }) => {
                 <img src={logoImg} alt="Buss Ek Puff Logo" style={{ height: isScrolled ? '40px' : '50px', transition: 'var(--transition)' }} />
             </div>
 
-            <div style={{ display: 'none', gap: '2rem', alignItems: 'center' }} className="desktop-menu">
-                <a href="#vapes" style={{ fontWeight: 500, opacity: 0.8 }}>VAPES</a>
-                <a href="#mirrors" style={{ fontWeight: 500, opacity: 0.8 }}>SHEESHA</a>
-                <a href="#about" style={{ fontWeight: 500, opacity: 0.8 }}>OUR STORY</a>
-                <ShoppingCart size={20} style={{ opacity: 0.8, cursor: 'pointer' }} />
-            </div>
-
-            {/* Styled version to show it works even without Tailwind */}
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                <style>
-                    {`
-            .nav-link { 
-              font-size: 0.9rem;
-              font-weight: 500;
-              letter-spacing: 1px;
-              opacity: 0.7;
-              transition: var(--transition);
-              cursor: pointer;
-            }
-            .nav-link:hover { opacity: 1; }
-            @media (min-width: 768px) {
-              .desktop-links { display: flex !important; }
-              .mobile-toggle { display: none !important; }
-            }
-          `}
-                </style>
+                <style>{`
+                    .nav-link {
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        letter-spacing: 1px;
+                        opacity: 0.7;
+                        transition: var(--transition);
+                        cursor: pointer;
+                    }
+                    .nav-link:hover { opacity: 1; }
+                    .nav-acc-link {
+                        font-size: 0.9rem;
+                        font-weight: 700;
+                        letter-spacing: 1px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.4rem;
+                        color: #4ADE80;
+                        opacity: 0.85;
+                        transition: opacity 0.2s;
+                    }
+                    .nav-acc-link:hover { opacity: 1; }
+                    @media (min-width: 768px) {
+                        .desktop-links { display: flex !important; }
+                        .mobile-toggle { display: none !important; }
+                    }
+                `}</style>
+
+                {/* Desktop Navigation */}
                 <div className="desktop-links" style={{ display: 'none', gap: '2.5rem', alignItems: 'center' }}>
                     <a onClick={() => onNavigate('products')} className="nav-link">PRODUCTS</a>
                     <a onClick={() => onNavigate('home', 'mirrors')} className="nav-link">SHEESHA</a>
+
+                    {/* Accessories link — auto-appears when first accessory is added in admin */}
+                    <AnimatePresence>
+                        {hasAccessories && (
+                            <motion.a
+                                key="acc-link"
+                                initial={{ opacity: 0, y: -8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.35 }}
+                                onClick={handleAccessoriesClick}
+                                className="nav-acc-link"
+                            >
+                                <Wrench size={14} />
+                                ACCESSORIES
+                            </motion.a>
+                        )}
+                    </AnimatePresence>
+
                     <a onClick={() => onNavigate('about')} className="nav-link">ABOUT US</a>
                     <a onClick={() => onNavigate('contact')} className="nav-link">CONTACT</a>
-                    <div style={{ height: '20px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
-                    <div
-                        onClick={() => setIsCartOpen(true)}
-                        style={{ position: 'relative', cursor: 'pointer' }}
-                        className="nav-link"
-                    >
+
+                    <div style={{ height: '20px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
+
+                    <div onClick={() => setIsCartOpen(true)} style={{ position: 'relative', cursor: 'pointer' }} className="nav-link">
                         <ShoppingCart size={18} />
                         {getCartCount() > 0 && (
                             <span style={{
@@ -99,6 +145,7 @@ const Navbar = ({ onNavigate }) => {
                     </div>
                 </div>
 
+                {/* Mobile Hamburger */}
                 <div className="mobile-toggle" style={{ zIndex: 1101 }} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                     {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </div>
@@ -130,10 +177,27 @@ const Navbar = ({ onNavigate }) => {
                     >
                         <a onClick={() => { onNavigate('products'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>PRODUCTS</a>
                         <a onClick={() => { onNavigate('home', 'mirrors'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>SHEESHA</a>
+
+                        {/* Mobile: Accessories link auto-appears */}
+                        <AnimatePresence>
+                            {hasAccessories && (
+                                <motion.a
+                                    key="acc-mobile"
+                                    initial={{ opacity: 0, scale: 0.85 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.85 }}
+                                    onClick={handleAccessoriesClick}
+                                    style={{ fontSize: '1.5rem', color: '#4ADE80', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                >
+                                    <Wrench size={20} /> ACCESSORIES
+                                </motion.a>
+                            )}
+                        </AnimatePresence>
+
                         <a onClick={() => { onNavigate('about'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>ABOUT US</a>
                         <a onClick={() => { onNavigate('contact'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>CONTACT</a>
                         <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
-                            <ShoppingCart size={24} className="nav-link" />
+                            <ShoppingCart size={24} className="nav-link" onClick={() => { setIsCartOpen(true); setIsMobileMenuOpen(false); }} />
                         </div>
                     </motion.div>
                 )}
