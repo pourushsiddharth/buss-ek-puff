@@ -6,6 +6,7 @@ import ProductSection from './components/ProductSection'
 import MirrorCarousel from './components/MirrorCarousel'
 import ProductSlider from './components/ProductSlider'
 import FAQ from './components/FAQ'
+import AccessoriesSection from './components/AccessoriesSection'
 import Contact from './components/Contact'
 import ProductDetail from './components/ProductDetail'
 import AboutUs from './components/AboutUs'
@@ -24,6 +25,9 @@ function App() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('admin') === 'true') {
             setCurrentPage('admin');
+        } else if (params.get('product')) {
+            setSelectedProduct(params.get('product'));
+            setCurrentPage('product-detail');
         }
     }, []);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -88,6 +92,7 @@ function App() {
                         <ProductSection onProductView={handleProductView} />
                         <MirrorCarousel onProductView={handleProductView} />
                         <ProductSlider onProductView={handleProductView} />
+                        <AccessoriesSection />
                         <FAQ />
                     </>
                 ) : currentPage === 'product-detail' ? (

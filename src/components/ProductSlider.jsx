@@ -8,6 +8,8 @@ const ProductSlider = ({ onProductView }) => {
     const [products, setProducts] = useState([]);
     const [activeIdx, setActiveIdx] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isPaused, setIsPaused] = useState(false);
+    const [isManual, setIsManual] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -30,9 +32,14 @@ const ProductSlider = ({ onProductView }) => {
                     }));
 
                     setProducts(processedProducts);
+                } else {
+                    console.warn('API response not ok, falling back to static data');
+                    setProducts(allProducts);
                 }
             } catch (err) {
                 console.error('Error fetching products:', err);
+                console.warn('Falling back to static data due to error');
+                setProducts(allProducts);
             } finally {
                 setLoading(false);
             }
@@ -42,25 +49,42 @@ const ProductSlider = ({ onProductView }) => {
 
     const active = products[activeIdx];
 
-    const next = () => setActiveIdx((prev) => (prev + 1) % products.length);
-    const prev = () => setActiveIdx((prev) => (prev - 1 + products.length) % products.length);
+    const autoNext = () => setActiveIdx((prev) => (prev + 1) % products.length);
 
+    const next = () => {
+        setIsManual(true);
+        setActiveIdx((prev) => (prev + 1) % products.length);
+    };
 
+    const prev = () => {
+        setIsManual(true);
+        setActiveIdx((prev) => (prev - 1 + products.length) % products.length);
+    };
+
+    useEffect(() => {
+        if (!loading && products.length > 0 && !isPaused && !isManual) {
+            const interval = setInterval(autoNext, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [loading, products.length, isPaused, isManual]);
     if (loading) return null;
     if (products.length === 0) return null;
 
     return (
-        <section style={{
-            minHeight: '100vh',
-            width: '100%',
-            backgroundColor: '#000',
-            position: 'relative',
-            overflow: 'hidden',
-            fontFamily: '"Inter", sans-serif',
-            padding: '80px 0 0 0',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
+        <section
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            style={{
+                minHeight: '100vh',
+                width: '100%',
+                backgroundColor: '#000',
+                position: 'relative',
+                overflow: 'hidden',
+                fontFamily: '"Inter", sans-serif',
+                padding: '80px 0 0 0',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
             <style>
                 {`
                     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
@@ -231,7 +255,7 @@ const ProductSlider = ({ onProductView }) => {
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             letterSpacing: '4px',
-                            marginBottom: '1.5rem',
+                            marginBottom: '1rem',
                             color: 'rgba(255,255,255,0.5)',
                             display: 'flex',
                             alignItems: 'center',
@@ -242,21 +266,63 @@ const ProductSlider = ({ onProductView }) => {
                         <div style={{ width: '50px', height: '1px', backgroundColor: 'rgba(255,255,255,0.3)' }} />
                     </motion.div>
 
+                    {active.is_out_of_stock && (
+                        <motion.div
+                            key={`stock-${activeIdx}`}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            style={{
+                                display: 'inline-block',
+                                background: 'rgba(231, 76, 60, 0.2)',
+                                color: '#e74c3c',
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '0.5rem',
+                                fontSize: '0.7rem',
+                                fontWeight: 800,
+                                letterSpacing: '1px',
+                                textTransform: 'uppercase',
+                                marginBottom: '1.5rem',
+                                border: '1px solid rgba(231, 76, 60, 0.4)'
+                            }}
+                        >
+                            Out of Stock
+                        </motion.div>
+                    )}
+
                     <motion.h1
-                        key={`title-${activeIdx}`}
-                        initial={{ opacity: 0, y: 20 }}
+                        key={`title-${active.id}`}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="main-title"
+                        className="product-title"
                         style={{
-                            fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+                            fontSize: 'clamp(3.5rem, 10vw, 7.5rem)',
                             fontWeight: 900,
-                            lineHeight: 0.95,
-                            marginBottom: '2rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '-2px'
+                            color: 'white',
+                            lineHeight: 0.9,
+                            marginBottom: '1.5rem',
+                            letterSpacing: '-2px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1.5rem',
+                            flexWrap: 'wrap'
                         }}
                     >
                         {active.title}
+                        {active.is_out_of_stock && (
+                            <span style={{
+                                fontSize: '1rem',
+                                background: 'rgba(231, 76, 60, 0.2)',
+                                border: '1px solid rgba(231, 76, 60, 0.4)',
+                                padding: '0.4rem 1rem',
+                                borderRadius: '2rem',
+                                color: '#e74c3c',
+                                fontWeight: 700,
+                                letterSpacing: '1px',
+                                textTransform: 'uppercase'
+                            }}>
+                                Out of Stock
+                            </span>
+                        )}
                     </motion.h1>
 
                     <motion.p
@@ -378,7 +444,10 @@ const ProductSlider = ({ onProductView }) => {
                     {allProducts.map((item, idx) => (
                         <motion.div
                             key={item.id}
-                            onClick={() => setActiveIdx(idx)}
+                            onClick={() => {
+                                setIsManual(true);
+                                setActiveIdx(idx);
+                            }}
                             className="card-glow slider-card"
                             whileHover={{ scale: 1.05 }}
                             style={{
@@ -398,10 +467,29 @@ const ProductSlider = ({ onProductView }) => {
                                     width: '100%',
                                     height: '100%',
                                     objectFit: 'cover',
-                                    opacity: activeIdx === idx ? 1 : 0.5,
-                                    transition: 'opacity 0.3s ease'
+                                    transition: 'transform 0.4s ease',
+                                    filter: item.is_out_of_stock ? 'grayscale(0.5) contrast(0.8)' : 'none'
                                 }}
                             />
+                            {item.is_out_of_stock && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '0.5rem',
+                                    left: '0.5rem',
+                                    padding: '0.25rem 0.6rem',
+                                    background: 'rgba(231, 76, 60, 0.8)',
+                                    borderRadius: '0.5rem',
+                                    color: 'white',
+                                    fontSize: '0.6rem',
+                                    fontWeight: 800,
+                                    letterSpacing: '0.5px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                }}>
+                                    Out
+                                </div>
+                            )}
+
                             <div style={{
                                 position: 'absolute',
                                 inset: 0,

@@ -24,9 +24,279 @@ import {
     Save,
     X,
     XCircle,
-    Star
+    Star,
+    Wrench
 } from 'lucide-react';
 import API_URL from '../config';
+
+const MaterialInput = ({ label, value, onChange, placeholder, type = 'text', multiline = false, rows = 3, required = false }) => {
+    const [isFocused, setIsFocused] = useState(false);
+
+    const inputStyle = {
+        width: '100%',
+        padding: '1.4rem 1rem 0.6rem',
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        border: `1.5px solid ${isFocused ? '#8A2BE2' : 'rgba(255,255,255,0.1)'}`,
+        borderRadius: '1.2rem',
+        color: 'white',
+        fontSize: '1rem',
+        outline: 'none',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        fontFamily: '"Outfit", sans-serif',
+        boxShadow: isFocused ? '0 0 15px rgba(138, 43, 226, 0.2)' : 'none',
+    };
+
+    return (
+        <div style={{ position: 'relative', width: '100%', marginBottom: '0.5rem' }}>
+            <span style={{
+                position: 'absolute',
+                left: '1rem',
+                top: isFocused || value ? '0.4rem' : '1.1rem',
+                fontSize: isFocused || value ? '0.75rem' : '1rem',
+                color: isFocused ? '#8A2BE2' : 'rgba(255,255,255,0.4)',
+                pointerEvents: 'none',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                fontWeight: isFocused || value ? 700 : 400,
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+            }}>
+                {label} {required && '*'}
+            </span>
+            {multiline ? (
+                <textarea
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder={isFocused ? placeholder : ''}
+                    rows={rows}
+                    style={{ ...inputStyle, resize: 'none' }}
+                    required={required}
+                />
+            ) : (
+                <input
+                    type={type}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder={isFocused ? placeholder : ''}
+                    style={inputStyle}
+                    required={required}
+                />
+            )}
+        </div>
+    );
+};
+
+const CustomSelect = ({ value, onChange, options, label, fullWidth = false }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+    return (
+        <div style={{ position: 'relative', width: fullWidth ? '100%' : 'auto' }}>
+            {label && <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', display: 'block' }}>{label}</label>}
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                    width: '100%',
+                    padding: '0.8rem 1.2rem',
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '0.75rem',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    gap: '1rem',
+                    fontSize: '0.95rem'
+                }}
+            >
+                <span style={{ fontWeight: 500 }}>{selectedOption.label}</span>
+                <ChevronDown size={18} style={{ opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        <div
+                            style={{ position: 'fixed', inset: 0, zIndex: 10 }}
+                            onClick={() => setIsOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                right: 0,
+                                marginTop: '0.5rem',
+                                backgroundColor: '#1a1a1a',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '1rem',
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                                zIndex: 11,
+                                overflow: 'hidden',
+                                minWidth: '200px'
+                            }}
+                        >
+                            <div style={{ padding: '0.5rem' }}>
+                                {options.map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(opt.value);
+                                            setIsOpen(false);
+                                        }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.8rem 1rem',
+                                            backgroundColor: value === opt.value ? 'rgba(138, 43, 226, 0.1)' : 'transparent',
+                                            border: 'none',
+                                            borderRadius: '0.5rem',
+                                            color: value === opt.value ? '#8A2BE2' : 'white',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            fontSize: '0.9rem',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (value !== opt.value) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (value !== opt.value) e.currentTarget.style.backgroundColor = 'transparent';
+                                        }}
+                                    >
+                                        {opt.label}
+                                        {value === opt.value && <Check size={16} />}
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+const ImageUpload = ({ label, currentPath, onUpload, fieldName, apiUrl }) => {
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch(`${apiUrl}/api/upload`, {
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.ok) throw new Error('Upload failed');
+            const data = await response.json();
+            if (data.success) {
+                onUpload(data.imageUrl); // Store the /uploads/filename path
+            } else {
+                alert('Upload failed: ' + data.error);
+            }
+        } catch (err) {
+            console.error('Error uploading:', err);
+            alert('Error uploading image');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const getPreviewUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        if (path.startsWith('/uploads')) return `${apiUrl}${path}`;
+        // For existing assets in src/assets/ that are just filenames
+        return `/src/assets/${path}`;
+    };
+
+    return (
+        <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
+                {label}
+            </label>
+            <div style={{
+                display: 'flex',
+                gap: '1.5rem',
+                alignItems: 'center',
+                padding: '1.2rem',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                borderRadius: '1.2rem',
+                border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+                <div style={{
+                    width: '80px',
+                    height: '80px',
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    borderRadius: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                    {currentPath ? (
+                        <img src={getPreviewUrl(currentPath)}
+                            alt="preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : <Image size={32} style={{ opacity: 0.2 }} />}
+                </div>
+                <div style={{ flex: 1 }}>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', marginBottom: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                        {currentPath ? currentPath.split('/').pop() : 'No image selected'}
+                    </div>
+                    <input
+                        type="file"
+                        id={`file-${fieldName}`}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => document.getElementById(`file-${fieldName}`).click()}
+                        style={{
+                            padding: '0.7rem 1.2rem',
+                            backgroundColor: 'rgba(138, 43, 226, 0.1)',
+                            border: '1px solid rgba(138, 43, 226, 0.3)',
+                            borderRadius: '0.8rem',
+                            color: 'white',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.6rem',
+                            transition: 'all 0.2s',
+                            outline: 'none'
+                        }}
+                        disabled={isUploading}
+                    >
+                        {isUploading ? <RefreshCw size={16} className="animate-spin" /> : <Plus size={16} />}
+                        {currentPath ? 'Select New Image' : 'Choose Local File'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const AdminDashboard = ({ onBack }) => {
     const [orders, setOrders] = useState([]);
@@ -38,7 +308,7 @@ const AdminDashboard = ({ onBack }) => {
     const [isUpdating, setIsUpdating] = useState(false);
 
     // Product Management State
-    const [view, setView] = useState('orders'); // 'orders' or 'products'
+    const [view, setView] = useState('orders'); // 'orders', 'products', or 'accessories'
     const [products, setProducts] = useState([]);
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
@@ -57,16 +327,27 @@ const AdminDashboard = ({ onBack }) => {
         is_featured: false,
         cover_image_path: '',
         features: [],
-        specifications: {}
+        is_out_of_stock: false,
+        variations: []
     });
     const [newFeature, setNewFeature] = useState('');
-    const [newSpec, setNewSpec] = useState({ key: '', value: '' });
+    const [newVariationFlavor, setNewVariationFlavor] = useState('');
+
+    // Accessories State
+    const [accessories, setAccessories] = useState([]);
+    const [isAccessoryModalOpen, setIsAccessoryModalOpen] = useState(false);
+    const [editingAccessory, setEditingAccessory] = useState(null);
+    const [accessoryFormData, setAccessoryFormData] = useState({
+        name: '', category: 'Coils', price: '', original_price: '', description: '', image_url: '', is_available: true
+    });
 
     useEffect(() => {
         if (view === 'orders') {
             fetchOrders();
         } else if (view === 'products') {
             fetchProducts();
+        } else if (view === 'accessories') {
+            fetchAccessories();
         }
     }, [view]);
 
@@ -85,6 +366,60 @@ const AdminDashboard = ({ onBack }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchAccessories = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_URL}/api/accessories`);
+            if (response.ok) {
+                const data = await response.json();
+                setAccessories(data.accessories);
+                setError(null);
+            }
+        } catch (err) {
+            setError('Failed to fetch accessories.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddAccessory = () => {
+        setEditingAccessory(null);
+        setAccessoryFormData({ name: '', category: 'Coils', price: '', original_price: '', description: '', image_url: '', is_available: true });
+        setIsAccessoryModalOpen(true);
+    };
+
+    const handleEditAccessory = (acc) => {
+        setEditingAccessory(acc);
+        setAccessoryFormData({ name: acc.name, category: acc.category, price: acc.price || '', original_price: acc.original_price || '', description: acc.description || '', image_url: acc.image_url || '', is_available: acc.is_available !== false });
+        setIsAccessoryModalOpen(true);
+    };
+
+    const handleDeleteAccessory = async (id) => {
+        if (!window.confirm('Delete this accessory?')) return;
+        try {
+            await fetch(`${API_URL}/api/accessories/${id}`, { method: 'DELETE' });
+            setAccessories(accessories.filter(a => a.id !== id));
+        } catch (err) { console.error(err); }
+    };
+
+    const handleAccessorySubmit = async (e) => {
+        e.preventDefault();
+        const url = editingAccessory ? `${API_URL}/api/accessories/${editingAccessory.id}` : `${API_URL}/api/accessories`;
+        const method = editingAccessory ? 'PUT' : 'POST';
+        try {
+            const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accessoryFormData) });
+            if (response.ok) {
+                const data = await response.json();
+                if (editingAccessory) {
+                    setAccessories(accessories.map(a => a.id === editingAccessory.id ? data.accessory : a));
+                } else {
+                    setAccessories([data.accessory, ...accessories]);
+                }
+                setIsAccessoryModalOpen(false);
+            }
+        } catch (err) { console.error(err); }
     };
 
 
@@ -150,7 +485,9 @@ const AdminDashboard = ({ onBack }) => {
             is_featured: false,
             cover_image_path: '',
             features: [],
-            specifications: {}
+            is_out_of_stock: false,
+            variations: [],
+            gallery_images: []
         });
         setIsProductModalOpen(true);
     };
@@ -163,8 +500,10 @@ const AdminDashboard = ({ onBack }) => {
             bg_path: product.bg_path || '',
             is_featured: product.is_featured || false,
             cover_image_path: product.cover_image_path || '',
-            specifications: typeof product.specifications === 'string' ? JSON.parse(product.specifications) : (product.specifications || {}),
-            features: typeof product.features === 'string' ? JSON.parse(product.features) : (product.features || [])
+            is_out_of_stock: product.is_out_of_stock || false,
+            features: typeof product.features === 'string' ? JSON.parse(product.features) : (product.features || []),
+            variations: typeof product.variations === 'string' ? JSON.parse(product.variations) : (product.variations || []),
+            gallery_images: typeof product.gallery_images === 'string' ? JSON.parse(product.gallery_images) : (product.gallery_images || [])
         });
         setIsProductModalOpen(true);
     };
@@ -255,279 +594,31 @@ const AdminDashboard = ({ onBack }) => {
         }
     };
 
-    const MaterialInput = ({ label, value, onChange, placeholder, type = 'text', multiline = false, rows = 3, required = false }) => {
-        const [isFocused, setIsFocused] = useState(false);
 
-        const inputStyle = {
-            width: '100%',
-            padding: '1.4rem 1rem 0.6rem',
-            backgroundColor: 'rgba(255,255,255,0.03)',
-            border: `1.5px solid ${isFocused ? '#8A2BE2' : 'rgba(255,255,255,0.1)'}`,
-            borderRadius: '1.2rem',
-            color: 'white',
-            fontSize: '1rem',
-            outline: 'none',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            fontFamily: '"Outfit", sans-serif',
-            boxShadow: isFocused ? '0 0 15px rgba(138, 43, 226, 0.2)' : 'none',
-        };
 
-        return (
-            <div style={{ position: 'relative', width: '100%', marginBottom: '0.5rem' }}>
-                <span style={{
-                    position: 'absolute',
-                    left: '1rem',
-                    top: isFocused || value ? '0.4rem' : '1.1rem',
-                    fontSize: isFocused || value ? '0.75rem' : '1rem',
-                    color: isFocused ? '#8A2BE2' : 'rgba(255,255,255,0.4)',
-                    pointerEvents: 'none',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    fontWeight: isFocused || value ? 700 : 400,
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px'
-                }}>
-                    {label} {required && '*'}
-                </span>
-                {multiline ? (
-                    <textarea
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        onFocus={() => setIsFocused(true)}
-                        onBlur={() => setIsFocused(false)}
-                        placeholder={isFocused ? placeholder : ''}
-                        rows={rows}
-                        style={{ ...inputStyle, resize: 'none' }}
-                        required={required}
-                    />
-                ) : (
-                    <input
-                        type={type}
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        onFocus={() => setIsFocused(true)}
-                        onBlur={() => setIsFocused(false)}
-                        placeholder={isFocused ? placeholder : ''}
-                        style={inputStyle}
-                        required={required}
-                    />
-                )}
-            </div>
-        );
-    };
-
-    const CustomSelect = ({ value, onChange, options, label, fullWidth = false }) => {
-        const [isOpen, setIsOpen] = useState(false);
-        const selectedOption = options.find(opt => opt.value === value) || options[0];
-
-        return (
-            <div style={{ position: 'relative', width: fullWidth ? '100%' : 'auto' }}>
-                {label && <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', display: 'block' }}>{label}</label>}
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    style={{
-                        width: '100%',
-                        padding: '0.8rem 1.2rem',
-                        backgroundColor: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '0.75rem',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        outline: 'none',
-                        gap: '1rem',
-                        fontSize: '0.95rem'
-                    }}
-                >
-                    <span style={{ fontWeight: 500 }}>{selectedOption.label}</span>
-                    <ChevronDown size={18} style={{ opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
-                </button>
-
-                <AnimatePresence>
-                    {isOpen && (
-                        <>
-                            <div
-                                style={{ position: 'fixed', inset: 0, zIndex: 10 }}
-                                onClick={() => setIsOpen(false)}
-                            />
-                            <motion.div
-                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                                style={{
-                                    position: 'absolute',
-                                    top: '100%',
-                                    left: 0,
-                                    right: 0,
-                                    marginTop: '0.5rem',
-                                    backgroundColor: '#1a1a1a',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '1rem',
-                                    boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-                                    zIndex: 11,
-                                    overflow: 'hidden',
-                                    minWidth: '200px'
-                                }}
-                            >
-                                <div style={{ padding: '0.5rem' }}>
-                                    {options.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            type="button"
-                                            onClick={() => {
-                                                onChange(opt.value);
-                                                setIsOpen(false);
-                                            }}
-                                            style={{
-                                                width: '100%',
-                                                padding: '0.8rem 1rem',
-                                                backgroundColor: value === opt.value ? 'rgba(138, 43, 226, 0.1)' : 'transparent',
-                                                border: 'none',
-                                                borderRadius: '0.5rem',
-                                                color: value === opt.value ? '#8A2BE2' : 'white',
-                                                textAlign: 'left',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                fontSize: '0.9rem',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (value !== opt.value) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (value !== opt.value) e.currentTarget.style.backgroundColor = 'transparent';
-                                            }}
-                                        >
-                                            {opt.label}
-                                            {value === opt.value && <Check size={16} />}
-                                        </button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-            </div>
-        );
-    };
-
-    const ImageUpload = ({ label, currentPath, onUpload, fieldName }) => {
-        const [isUploading, setIsUploading] = useState(false);
-
-        const handleFileChange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            setIsUploading(true);
-            const formData = new FormData();
-            formData.append('image', file);
-
-            try {
-                const response = await fetch(`${API_URL}/api/upload`, {
-                    method: 'POST',
-                    body: formData,
-                });
-                if (!response.ok) throw new Error('Upload failed');
-                const data = await response.json();
-                if (data.success) {
-                    onUpload(data.imageUrl); // Store the /uploads/filename path
-                } else {
-                    alert('Upload failed: ' + data.error);
-                }
-            } catch (err) {
-                console.error('Error uploading:', err);
-                alert('Error uploading image');
-            } finally {
-                setIsUploading(false);
-            }
-        };
-
-        const getPreviewUrl = (path) => {
-            if (!path) return null;
-            if (path.startsWith('http')) return path;
-            if (path.startsWith('/uploads')) return `${API_URL}${path}`;
-            // For existing assets in src/assets/ that are just filenames
-            return `/src/assets/${path}`;
-        };
-
-        return (
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
-                    {label}
-                </label>
-                <div style={{
-                    display: 'flex',
-                    gap: '1.5rem',
-                    alignItems: 'center',
-                    padding: '1.2rem',
-                    backgroundColor: 'rgba(255,255,255,0.03)',
-                    borderRadius: '1.2rem',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                    <div style={{
-                        width: '80px',
-                        height: '80px',
-                        backgroundColor: 'rgba(255,255,255,0.05)',
-                        borderRadius: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        border: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        {currentPath ? (
-                            <img src={getPreviewUrl(currentPath)}
-                                alt="preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                        ) : <Image size={32} style={{ opacity: 0.2 }} />}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', marginBottom: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
-                            {currentPath ? currentPath.split('/').pop() : 'No image selected'}
-                        </div>
-                        <input
-                            type="file"
-                            id={`file-${fieldName}`}
-                            onChange={handleFileChange}
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => document.getElementById(`file-${fieldName}`).click()}
-                            style={{
-                                padding: '0.7rem 1.2rem',
-                                backgroundColor: 'rgba(138, 43, 226, 0.1)',
-                                border: '1px solid rgba(138, 43, 226, 0.3)',
-                                borderRadius: '0.8rem',
-                                color: 'white',
-                                fontSize: '0.85rem',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.6rem',
-                                transition: 'all 0.2s',
-                                outline: 'none'
-                            }}
-                            disabled={isUploading}
-                        >
-                            {isUploading ? <RefreshCw size={16} className="animate-spin" /> : <Plus size={16} />}
-                            {currentPath ? 'Select New Image' : 'Choose Local File'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     if (loading && orders.length === 0) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', color: 'white' }}>
-                <RefreshCw className="animate-spin" size={48} />
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#000',
+                color: 'white',
+                flexDirection: 'column',
+                gap: '1rem'
+            }}>
+                <img
+                    src="/assets/loading.gif"
+                    alt="Loading..."
+                    style={{
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'contain',
+                        opacity: 0.8
+                    }}
+                />
             </div>
         );
     }
@@ -557,69 +648,44 @@ const AdminDashboard = ({ onBack }) => {
             )}
 
             {/* Navigation Tabs */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
                 <button
                     onClick={() => setView('orders')}
-                    style={{
-                        padding: '1rem 2rem',
-                        borderRadius: '1rem',
-                        background: view === 'orders' ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${view === 'orders' ? '#8A2BE2' : 'rgba(255,255,255,0.05)'}`,
-                        color: view === 'orders' ? '#8A2BE2' : 'white',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                    }}
+                    style={{ padding: '1rem 2rem', borderRadius: '1rem', background: view === 'orders' ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255,255,255,0.03)', border: `1px solid ${view === 'orders' ? '#8A2BE2' : 'rgba(255,255,255,0.05)'}`, color: view === 'orders' ? '#8A2BE2' : 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
                 >
                     <ShoppingBag size={20} /> Orders
                 </button>
                 <button
                     onClick={() => setView('products')}
-                    style={{
-                        padding: '1rem 2rem',
-                        borderRadius: '1rem',
-                        background: view === 'products' ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${view === 'products' ? '#8A2BE2' : 'rgba(255,255,255,0.05)'}`,
-                        color: view === 'products' ? '#8A2BE2' : 'white',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                    }}
+                    style={{ padding: '1rem 2rem', borderRadius: '1rem', background: view === 'products' ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255,255,255,0.03)', border: `1px solid ${view === 'products' ? '#8A2BE2' : 'rgba(255,255,255,0.05)'}`, color: view === 'products' ? '#8A2BE2' : 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
                 >
                     <Package size={20} /> Inventory
                 </button>
+                <button
+                    onClick={() => setView('accessories')}
+                    style={{ padding: '1rem 2rem', borderRadius: '1rem', background: view === 'accessories' ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${view === 'accessories' ? '#4ADE80' : 'rgba(255,255,255,0.05)'}`, color: view === 'accessories' ? '#4ADE80' : 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+                >
+                    <Wrench size={20} /> Accessories
+                </button>
                 {view === 'products' && (
-                    <button
-                        onClick={handleAddProduct}
-                        style={{
-                            marginLeft: 'auto',
-                            padding: '1rem 2rem',
-                            borderRadius: '1rem',
-                            background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
-                            border: 'none',
-                            color: 'white',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.75rem'
-                        }}
-                    >
+                    <button onClick={handleAddProduct} style={{ marginLeft: 'auto', padding: '1rem 2rem', borderRadius: '1rem', background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)', border: 'none', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <Plus size={20} /> Add Product
+                    </button>
+                )}
+                {view === 'accessories' && (
+                    <button onClick={handleAddAccessory} style={{ marginLeft: 'auto', padding: '1rem 2rem', borderRadius: '1rem', background: 'linear-gradient(135deg, #4ADE80 0%, #22C55E 100%)', border: 'none', color: '#000', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Plus size={20} /> Add Accessory
                     </button>
                 )}
             </div>
 
             {/* Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 <StatCard icon={<ShoppingBag color="#8A2BE2" />} label="Total Orders" value={stats.total} />
                 <StatCard icon={<Clock color="#FFA500" />} label="Pending" value={stats.pending} />
                 <StatCard icon={<CheckCircle color="#2ecc71" />} label="Completed" value={stats.completed} />
-                <StatCard icon={<Package color="#3498db" />} label="Total Products" value={products.length} />
+                <StatCard icon={<Package color="#3498db" />} label="Products" value={products.length} />
+                <StatCard icon={<Wrench color="#4ADE80" />} label="Accessories" value={accessories.length} />
             </div>
 
             {/* Controls */}
@@ -717,7 +783,7 @@ const AdminDashboard = ({ onBack }) => {
                         </tbody>
                     </table>
                 </div>
-            ) : (
+            ) : view === 'products' ? (
                 <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '1.5rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -731,19 +797,13 @@ const AdminDashboard = ({ onBack }) => {
                         </thead>
                         <tbody>
                             {filteredProducts.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
-                                        No products found.
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>No products found.</td></tr>
                             ) : (
                                 filteredProducts.map(product => (
                                     <tr key={product.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }}>
                                         <td style={{ padding: '1.2rem 1.5rem' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    <Package size={20} color="#8A2BE2" />
-                                                </div>
+                                                <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={20} color="#8A2BE2" /></div>
                                                 <div style={{ fontWeight: 700 }}>{product.title}</div>
                                             </div>
                                         </td>
@@ -754,6 +814,56 @@ const AdminDashboard = ({ onBack }) => {
                                             <div style={{ display: 'flex', gap: '1rem' }}>
                                                 <button onClick={() => handleEditProduct(product)} style={{ background: 'none', border: 'none', color: '#8A2BE2', cursor: 'pointer' }}><Edit2 size={18} /></button>
                                                 <button onClick={() => handleDeleteProduct(product.id)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                /* ── Accessories Table ── */
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '1.5rem', border: '1px solid rgba(74,222,128,0.1)', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead style={{ backgroundColor: 'rgba(74,222,128,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <tr>
+                                <th style={{ padding: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Name</th>
+                                <th style={{ padding: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Category</th>
+                                <th style={{ padding: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Price</th>
+                                <th style={{ padding: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Status</th>
+                                <th style={{ padding: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {accessories.length === 0 ? (
+                                <tr><td colSpan="5" style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
+                                    No accessories yet. Click "Add Accessory" to get started.
+                                </td></tr>
+                            ) : (
+                                accessories.map(acc => (
+                                    <tr key={acc.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }}>
+                                        <td style={{ padding: '1.2rem 1.5rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                {acc.image_url ? (
+                                                    <img src={acc.image_url} alt={acc.name} style={{ width: 40, height: 40, borderRadius: '0.5rem', objectFit: 'cover', background: 'rgba(255,255,255,0.05)' }} />
+                                                ) : (
+                                                    <div style={{ width: 40, height: 40, background: 'rgba(74,222,128,0.1)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Wrench size={18} color="#4ADE80" /></div>
+                                                )}
+                                                <div style={{ fontWeight: 700 }}>{acc.name}</div>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '1.2rem 1.5rem', color: 'rgba(255,255,255,0.5)' }}>{acc.category}</td>
+                                        <td style={{ padding: '1.2rem 1.5rem', fontWeight: 700 }}>{acc.price || '—'}</td>
+                                        <td style={{ padding: '1.2rem 1.5rem' }}>
+                                            <span style={{ padding: '0.3rem 0.8rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: 700, backgroundColor: acc.is_available ? 'rgba(74,222,128,0.1)' : 'rgba(231,76,60,0.1)', color: acc.is_available ? '#4ADE80' : '#e74c3c', border: `1px solid ${acc.is_available ? 'rgba(74,222,128,0.3)' : 'rgba(231,76,60,0.3)'}` }}>
+                                                {acc.is_available ? 'AVAILABLE' : 'UNAVAILABLE'}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '1.2rem 1.5rem' }}>
+                                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                                <button onClick={() => handleEditAccessory(acc)} style={{ background: 'none', border: 'none', color: '#4ADE80', cursor: 'pointer' }}><Edit2 size={18} /></button>
+                                                <button onClick={() => handleDeleteAccessory(acc.id)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}><Trash2 size={18} /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -955,13 +1065,142 @@ const AdminDashboard = ({ onBack }) => {
                                             currentPath={productFormData.image_path}
                                             onUpload={(url) => setProductFormData({ ...productFormData, image_path: url })}
                                             fieldName="image_path"
+                                            apiUrl={API_URL}
                                         />
                                         <ImageUpload
                                             label="Background Image"
                                             currentPath={productFormData.bg_path}
                                             onUpload={(url) => setProductFormData({ ...productFormData, bg_path: url })}
                                             fieldName="bg_path"
+                                            apiUrl={API_URL}
                                         />
+                                    </div>
+
+                                    {/* Gallery Images Section */}
+                                    <div style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                            <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
+                                                📸 Product Gallery ({(productFormData.gallery_images || []).length} images)
+                                            </label>
+                                            <label style={{
+                                                padding: '0.6rem 1.2rem',
+                                                background: 'rgba(138, 43, 226, 0.1)',
+                                                border: '1px solid rgba(138, 43, 226, 0.3)',
+                                                borderRadius: '0.8rem',
+                                                color: '#8A2BE2',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 700,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem'
+                                            }}>
+                                                <Plus size={16} /> Add Gallery Image
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    style={{ display: 'none' }}
+                                                    onChange={async (e) => {
+                                                        const files = Array.from(e.target.files);
+                                                        for (const file of files) {
+                                                            const formData = new FormData();
+                                                            formData.append('image', file);
+                                                            try {
+                                                                const response = await fetch(`${API_URL}/api/upload`, { method: 'POST', body: formData });
+                                                                if (response.ok) {
+                                                                    const data = await response.json();
+                                                                    if (data.success) {
+                                                                        setProductFormData(prev => ({
+                                                                            ...prev,
+                                                                            gallery_images: [...(prev.gallery_images || []), data.imageUrl]
+                                                                        }));
+                                                                    }
+                                                                }
+                                                            } catch (err) {
+                                                                console.error('Gallery upload error:', err);
+                                                            }
+                                                        }
+                                                        e.target.value = '';
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                        <div style={{
+                                            minHeight: '100px',
+                                            padding: '1rem',
+                                            backgroundColor: 'rgba(255,255,255,0.02)',
+                                            borderRadius: '1.2rem',
+                                            border: `1px dashed ${(productFormData.gallery_images || []).length === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(138, 43, 226, 0.3)'}`,
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: '0.75rem',
+                                            alignItems: 'flex-start'
+                                        }}>
+                                            {(productFormData.gallery_images || []).length === 0 ? (
+                                                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', color: 'rgba(255,255,255,0.2)' }}>
+                                                    <Image size={32} style={{ marginBottom: '0.5rem' }} />
+                                                    <span style={{ fontSize: '0.85rem' }}>No gallery images yet. Click "Add Gallery Image" to upload.</span>
+                                                </div>
+                                            ) : (
+                                                (productFormData.gallery_images || []).map((imgUrl, idx) => {
+                                                    const previewUrl = imgUrl.startsWith('http') ? imgUrl : imgUrl.startsWith('/uploads') ? `${API_URL}${imgUrl}` : `/src/assets/${imgUrl}`;
+                                                    return (
+                                                        <div key={idx} style={{ position: 'relative', width: '90px', height: '90px' }}>
+                                                            <img src={previewUrl} alt={`Gallery ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setProductFormData(prev => ({ ...prev, gallery_images: (prev.gallery_images || []).filter((_, i) => i !== idx) }))}
+                                                                style={{ position: 'absolute', top: '-8px', right: '-8px', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e74c3c', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', padding: 0 }}
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Out of Stock Logic */}
+                                    <div style={{ gridColumn: '1 / -1', padding: '1.5rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: productFormData.is_out_of_stock ? 'rgba(231, 76, 60, 0.2)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }}>
+                                                    <XCircle size={20} color={productFormData.is_out_of_stock ? '#e74c3c' : 'rgba(255,255,255,0.3)'} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: 700, fontSize: '1rem' }}>Out of Stock</div>
+                                                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Mark this product as out of stock (users cannot buy it)</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setProductFormData({ ...productFormData, is_out_of_stock: !productFormData.is_out_of_stock })}
+                                                style={{
+                                                    width: '50px',
+                                                    height: '26px',
+                                                    borderRadius: '13px',
+                                                    backgroundColor: productFormData.is_out_of_stock ? '#e74c3c' : 'rgba(255,255,255,0.1)',
+                                                    position: 'relative',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.3s'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '3px',
+                                                    left: productFormData.is_out_of_stock ? '27px' : '3px',
+                                                    width: '20px',
+                                                    height: '20px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: 'white',
+                                                    transition: 'all 0.3s',
+                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                                }} />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Featured Product Logic */}
@@ -1016,6 +1255,7 @@ const AdminDashboard = ({ onBack }) => {
                                                         currentPath={productFormData.cover_image_path}
                                                         onUpload={(url) => setProductFormData({ ...productFormData, cover_image_path: url })}
                                                         fieldName="cover_image_path"
+                                                        apiUrl={API_URL}
                                                     />
                                                 </div>
                                             </motion.div>
@@ -1107,33 +1347,41 @@ const AdminDashboard = ({ onBack }) => {
                                     </div>
                                 </div>
 
-                                {/* Specifications Section */}
+                                {/* Variations Section */}
                                 <div style={{ marginTop: '2.5rem' }}>
                                     <h4 style={{ fontSize: '0.9rem', color: '#8A2BE2', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <div style={{ width: '20px', height: '2px', backgroundColor: '#8A2BE2' }}></div> Product Specifications
+                                        <div style={{ width: '20px', height: '2px', backgroundColor: '#8A2BE2' }}></div> Product Variations (Flavors)
                                     </h4>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-                                        {Object.entries(productFormData.specifications || {}).map(([key, value]) => (
-                                            <div key={key} style={{
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        {(productFormData.variations || []).map((variation, idx) => (
+                                            <div key={idx} style={{
                                                 display: 'flex',
-                                                justifyContent: 'space-between',
                                                 alignItems: 'center',
+                                                justifyContent: 'space-between',
                                                 padding: '1.25rem',
                                                 backgroundColor: 'rgba(255,255,255,0.02)',
                                                 borderRadius: '1.25rem',
                                                 border: '1px solid rgba(255,255,255,0.05)',
-                                                transition: 'all 0.3s'
                                             }}>
-                                                <div>
-                                                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.25rem' }}>{key}</div>
-                                                    <div style={{ fontWeight: 600, color: 'white' }}>{value}</div>
+                                                <div style={{ flex: 1, marginRight: '1rem' }}>
+                                                    <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'white' }}>{variation.flavor}</div>
+                                                    <ImageUpload
+                                                        label={`Image for ${variation.flavor}`}
+                                                        currentPath={variation.image}
+                                                        onUpload={(url) => {
+                                                            const newVariations = [...productFormData.variations];
+                                                            newVariations[idx].image = url;
+                                                            setProductFormData({ ...productFormData, variations: newVariations });
+                                                        }}
+                                                        fieldName={`variation_img_${idx}`}
+                                                        apiUrl={API_URL}
+                                                    />
                                                 </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        const newSpecs = { ...productFormData.specifications };
-                                                        delete newSpecs[key];
-                                                        setProductFormData({ ...productFormData, specifications: newSpecs });
+                                                        const newVariations = productFormData.variations.filter((_, i) => i !== idx);
+                                                        setProductFormData({ ...productFormData, variations: newVariations });
                                                     }}
                                                     style={{ background: 'rgba(255,71,87,0.1)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ff4757', transition: 'all 0.2s' }}
                                                 >
@@ -1141,12 +1389,13 @@ const AdminDashboard = ({ onBack }) => {
                                                 </button>
                                             </div>
                                         ))}
+
                                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', width: '100%', alignItems: 'center' }}>
                                             <input
                                                 type="text"
-                                                value={newSpec.key}
-                                                onChange={(e) => setNewSpec({ ...newSpec, key: e.target.value })}
-                                                placeholder="Spec Name (e.g. Battery)"
+                                                value={newVariationFlavor}
+                                                onChange={(e) => setNewVariationFlavor(e.target.value)}
+                                                placeholder="Enter new flavor name..."
                                                 style={{
                                                     flex: 1,
                                                     padding: '0.8rem 1.2rem',
@@ -1156,53 +1405,47 @@ const AdminDashboard = ({ onBack }) => {
                                                     color: 'white',
                                                     outline: 'none'
                                                 }}
-                                            />
-                                            <input
-                                                type="text"
-                                                value={newSpec.value}
-                                                onChange={(e) => setNewSpec({ ...newSpec, value: e.target.value })}
-                                                placeholder="Value (e.g. 5000mAh)"
-                                                style={{
-                                                    flex: 1,
-                                                    padding: '0.8rem 1.2rem',
-                                                    backgroundColor: 'rgba(255,255,255,0.05)',
-                                                    border: '1px solid rgba(255,255,255,0.1)',
-                                                    borderRadius: '0.8rem',
-                                                    color: 'white',
-                                                    outline: 'none'
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (newVariationFlavor.trim()) {
+                                                            setProductFormData({
+                                                                ...productFormData,
+                                                                variations: [...(productFormData.variations || []), { flavor: newVariationFlavor.trim(), image: '' }]
+                                                            });
+                                                            setNewVariationFlavor('');
+                                                        }
+                                                    }
                                                 }}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    if (newSpec.key.trim() && newSpec.value.trim()) {
+                                                    if (newVariationFlavor.trim()) {
                                                         setProductFormData({
                                                             ...productFormData,
-                                                            specifications: {
-                                                                ...(productFormData.specifications || {}),
-                                                                [newSpec.key.trim()]: newSpec.value.trim()
-                                                            }
+                                                            variations: [...(productFormData.variations || []), { flavor: newVariationFlavor.trim(), image: '' }]
                                                         });
-                                                        setNewSpec({ key: '', value: '' });
+                                                        setNewVariationFlavor('');
                                                     }
                                                 }}
                                                 style={{
-                                                    padding: '0.8rem',
-                                                    backgroundColor: 'rgba(138, 43, 226, 0.1)',
-                                                    border: '1px solid rgba(138, 43, 226, 0.3)',
+                                                    padding: '0.8rem 1.5rem',
+                                                    backgroundColor: '#8A2BE2',
+                                                    border: 'none',
                                                     borderRadius: '0.8rem',
-                                                    color: '#8A2BE2',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
+                                                    color: 'white',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
                                                 }}
                                             >
-                                                <Plus size={20} />
+                                                Add Flavor
                                             </button>
                                         </div>
                                     </div>
                                 </div>
+
+
 
                                 <div style={{ marginTop: '3rem', display: 'flex', gap: '1rem' }}>
                                     <button
@@ -1236,6 +1479,74 @@ const AdminDashboard = ({ onBack }) => {
                                 </div>
                             </form>
 
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Accessory Add/Edit Modal */}
+            <AnimatePresence>
+                {isAccessoryModalOpen && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setIsAccessoryModalOpen(false)}
+                            style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+                        />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            style={{ position: 'relative', width: '100%', maxWidth: '680px', maxHeight: '90vh', backgroundColor: '#0a0a0a', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '2rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                        >
+                            <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <Wrench size={22} color="#4ADE80" />
+                                    <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>{editingAccessory ? 'Edit Accessory' : 'Add New Accessory'}</h3>
+                                </div>
+                                <button onClick={() => setIsAccessoryModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}>
+                                    <XCircle size={24} />
+                                </button>
+                            </div>
+                            <form onSubmit={handleAccessorySubmit} style={{ padding: '2rem', overflowY: 'auto', flex: 1 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <MaterialInput label="Accessory Name" value={accessoryFormData.name} onChange={(v) => setAccessoryFormData({ ...accessoryFormData, name: v })} placeholder="e.g. Coil Pack x5" required />
+                                    </div>
+                                    <div style={{ zIndex: 50 }}>
+                                        <CustomSelect label="Category" value={accessoryFormData.category} onChange={(v) => setAccessoryFormData({ ...accessoryFormData, category: v })} fullWidth
+                                            options={[
+                                                { value: 'Coils', label: 'Coils' },
+                                                { value: 'Glass', label: 'Glass / Tanks' },
+                                                { value: 'Battery', label: 'Battery' },
+                                                { value: 'Atomizer', label: 'Atomizer / DIY' },
+                                                { value: 'Pods', label: 'Pods' },
+                                                { value: 'General', label: 'General' },
+                                            ]}
+                                        />
+                                    </div>
+                                    <MaterialInput label="Price" value={accessoryFormData.price} onChange={(v) => setAccessoryFormData({ ...accessoryFormData, price: v })} placeholder="e.g. ₹499" />
+                                    <MaterialInput label="Original Price (MRP)" value={accessoryFormData.original_price} onChange={(v) => setAccessoryFormData({ ...accessoryFormData, original_price: v })} placeholder="e.g. ₹699" />
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <MaterialInput label="Description" value={accessoryFormData.description} onChange={(v) => setAccessoryFormData({ ...accessoryFormData, description: v })} multiline rows={3} placeholder="Short product description..." />
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <ImageUpload
+                                            label="Accessory Image"
+                                            currentPath={accessoryFormData.image_url}
+                                            onUpload={(url) => setAccessoryFormData({ ...accessoryFormData, image_url: url })}
+                                            fieldName="accessory_image"
+                                            apiUrl={API_URL}
+                                        />
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.2rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem' }}>
+                                        <input type="checkbox" id="acc-available" checked={accessoryFormData.is_available} onChange={(e) => setAccessoryFormData({ ...accessoryFormData, is_available: e.target.checked })} style={{ width: 18, height: 18, accentColor: '#4ADE80', cursor: 'pointer' }} />
+                                        <label htmlFor="acc-available" style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', letterSpacing: '0.5px' }}>Mark as Available</label>
+                                    </div>
+                                </div>
+                                <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
+                                    <button type="button" onClick={() => setIsAccessoryModalOpen(false)} style={{ flex: 1, padding: '1.2rem', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1.2rem', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                    <button type="submit" style={{ flex: 2, padding: '1.2rem', background: 'linear-gradient(135deg, #4ADE80 0%, #22C55E 100%)', border: 'none', borderRadius: '1.2rem', color: '#000', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: '0 10px 20px rgba(74,222,128,0.25)' }}>
+                                        <Save size={20} /> {editingAccessory ? 'Update Accessory' : 'Save Accessory'}
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}

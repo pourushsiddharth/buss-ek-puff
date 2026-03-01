@@ -58,7 +58,18 @@ const products = [
         description: "Cool and invigorating garden mint with a subtle touch of ocean freshness.",
         location: "Coastal Breeze",
         image: product5,
-        bgImage: product5_bg
+        bgImage: product5_bg,
+        is_out_of_stock: false
+    },
+    {
+        id: 'v6',
+        name: "JADE JOURNEY",
+        subtitle: "ANCIENT VALLEYS",
+        description: "An exotic escape with refreshing green melon and cooling mint. Pure bliss in every puff.",
+        location: "Ancient Valleys",
+        image: product5,
+        bgImage: product5_bg,
+        is_out_of_stock: true
     }
 ];
 
@@ -158,6 +169,7 @@ const ProductSection = ({ onProductView }) => {
                         backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%), url(${current.bgImage})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
+                        filter: current.is_out_of_stock ? 'grayscale(0.3) contrast(0.9)' : 'none'
                     }}
                 />
             </AnimatePresence>
@@ -193,6 +205,30 @@ const ProductSection = ({ onProductView }) => {
                         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '1px' }}>OFFICIAL PARTNER</span>
                         <img src={elfbarLogo} alt="Elf Bar" style={{ height: '14px', filter: 'brightness(0) invert(1)' }} />
                     </motion.div>
+
+                    {/* Out of Stock Badge */}
+                    {current.is_out_of_stock && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{
+                                background: 'rgba(231, 76, 60, 0.2)',
+                                border: '1px solid rgba(231, 76, 60, 0.4)',
+                                padding: '0.5rem 1.2rem',
+                                borderRadius: '2rem',
+                                color: '#e74c3c',
+                                fontWeight: 800,
+                                fontSize: '0.8rem',
+                                letterSpacing: '2px',
+                                width: 'fit-content',
+                                marginBottom: '1.5rem',
+                                textTransform: 'uppercase'
+                            }}
+                        >
+                            OUT OF STOCK
+                        </motion.div>
+                    )}
+
                     <motion.div
                         key={`loc-${currentIndex}`}
                         initial={{ y: 20, opacity: 0 }}

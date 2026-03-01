@@ -27,13 +27,11 @@ const productsData = [
             'Multiple Flavor Options',
             'Authentic Product Guarantee'
         ],
-        specifications: {
-            'Nicotine Strength': '5% (50mg)',
-            'Battery': '650mAh Rechargeable',
-            'E-liquid Capacity': '12ml',
-            'Puff Count': '5000+ puffs',
-            'Flavor': 'Dark Berry Blend'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Original Dark Berry', image: 'product1.png' },
+            { flavor: 'Strawberry Blast', image: 'product3.png' }
+        ]
     },
     {
         id: 'v2',
@@ -55,13 +53,11 @@ const productsData = [
             'Premium Build Quality',
             'Long-Lasting Performance'
         ],
-        specifications: {
-            'Nicotine Strength': '5% (50mg)',
-            'Battery': '650mAh Rechargeable',
-            'E-liquid Capacity': '12ml',
-            'Puff Count': '5000+ puffs',
-            'Flavor': 'Arctic Menthol'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Pure Arctic', image: 'product2.png' },
+            { flavor: 'Mint Fusion', image: 'product5.png' }
+        ]
     },
     {
         id: 'v3',
@@ -83,13 +79,11 @@ const productsData = [
             'Vibrant Color Design',
             'Consistent Flavor Profile'
         ],
-        specifications: {
-            'Nicotine Strength': '5% (50mg)',
-            'Battery': '650mAh Rechargeable',
-            'E-liquid Capacity': '12ml',
-            'Puff Count': '5000+ puffs',
-            'Flavor': 'Mixed Berries'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Crimson Base', image: 'product3.png' },
+            { flavor: 'Berry Ice', image: 'product2.png' }
+        ]
     },
     {
         id: 'v4',
@@ -111,13 +105,10 @@ const productsData = [
             'Smooth Throat Hit',
             'Classic Design'
         ],
-        specifications: {
-            'Nicotine Strength': '5% (50mg)',
-            'Battery': '650mAh Rechargeable',
-            'E-liquid Capacity': '12ml',
-            'Puff Count': '5000+ puffs',
-            'Flavor': 'Golden Tobacco'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Smooth Golden', image: 'product4.png' }
+        ]
     },
     {
         id: 'v5',
@@ -139,13 +130,36 @@ const productsData = [
             'Sleek Green Design',
             'Refreshing Aftertaste'
         ],
-        specifications: {
-            'Nicotine Strength': '5% (50mg)',
-            'Battery': '650mAh Rechargeable',
-            'E-liquid Capacity': '12ml',
-            'Puff Count': '5000+ puffs',
-            'Flavor': 'Garden Mint'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Emerald Base', image: 'product5.png' },
+            { flavor: 'Tobacco Mint', image: 'product4.png' }
+        ]
+    },
+    {
+        id: 'v6',
+        title: 'JADE JOURNEY',
+        category: 'PREMIUM VAPE',
+        price: '₹3,299',
+        originalPrice: '₹4,499',
+        rating: 4.8,
+        reviews: 215,
+        description: 'An exotic escape with refreshing green melon and cooling mint. Pure bliss in every puff.',
+        imagePath: 'product5.png',
+        bgPath: 'product5_bg.png',
+        type: 'Vape',
+        features: [
+            'Fresh Mint Flavor',
+            '5000+ Puffs Capacity',
+            'Cooling Sensation',
+            'Natural Mint Extract',
+            'Sleek Green Design',
+            'Refreshing Aftertaste'
+        ],
+        is_out_of_stock: true,
+        variations: [
+            { flavor: 'Jade Edition', image: 'product5.png' }
+        ]
     },
     {
         id: 'h1',
@@ -167,13 +181,11 @@ const productsData = [
             'Easy to Clean',
             'Complete Accessories Included'
         ],
-        specifications: {
-            'Height': '24 inches',
-            'Material': 'Stainless Steel & Glass',
-            'Finish': 'Ruby Mirror',
-            'Hose Length': '72 inches',
-            'Bowl Type': 'Premium Ceramic'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Ruby Edition', image: 'hookah_ruby.png' },
+            { flavor: 'Emerald Edition', image: 'hookah_emerald.png' }
+        ]
     },
     {
         id: 'h2',
@@ -195,13 +207,10 @@ const productsData = [
             'Elegant Appearance',
             'Complete Setup Included'
         ],
-        specifications: {
-            'Height': '26 inches',
-            'Material': 'Premium Crystal Glass',
-            'Finish': 'Clear Glass',
-            'Hose Length': '72 inches',
-            'Bowl Type': 'Premium Ceramic'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Clear Crystal', image: 'hookah3_glass.png' }
+        ]
     },
     {
         id: 'h3',
@@ -223,13 +232,11 @@ const productsData = [
             'Smooth Smoking Experience',
             'Premium Accessories'
         ],
-        specifications: {
-            'Height': '24 inches',
-            'Material': 'Stainless Steel & Glass',
-            'Finish': 'Silver Mirror',
-            'Hose Length': '72 inches',
-            'Bowl Type': 'Premium Ceramic'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Sterling Edition', image: 'hookah_silver.png' },
+            { flavor: 'Gold Trim', image: 'hookah_gold.png' }
+        ]
     },
     {
         id: 'h4',
@@ -251,13 +258,11 @@ const productsData = [
             'Superior Performance',
             'Exclusive Accessories'
         ],
-        specifications: {
-            'Height': '26 inches',
-            'Material': 'Stainless Steel & Glass',
-            'Finish': 'Gold Mirror',
-            'Hose Length': '72 inches',
-            'Bowl Type': 'Premium Ceramic'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Gilded Base', image: 'hookah_gold.png' },
+            { flavor: 'Duo Trim', image: 'hookah_silver&gold.png' }
+        ]
     },
     {
         id: 'h5',
@@ -279,13 +284,10 @@ const productsData = [
             'Exceptional Quality',
             'Limited Edition'
         ],
-        specifications: {
-            'Height': '28 inches',
-            'Material': 'Stainless Steel & Glass',
-            'Finish': 'Silver & Gold Mirror',
-            'Hose Length': '72 inches',
-            'Bowl Type': 'Premium Ceramic'
-        }
+        is_out_of_stock: false,
+        variations: [
+            { flavor: 'Duo Edition', image: 'hookah_silver&gold.png' }
+        ]
     },
     {
         id: 'h6',
@@ -307,13 +309,11 @@ const productsData = [
             'Smooth Performance',
             'Complete Package'
         ],
-        specifications: {
-            'Height': '25 inches',
-            'Material': 'Stainless Steel & Glass',
-            'Finish': 'Emerald Mirror',
-            'Hose Length': '72 inches',
-            'Bowl Type': 'Premium Ceramic'
-        }
+        is_out_of_stock: true,
+        variations: [
+            { flavor: 'Jade Edition', image: 'hookah_emerald.png' },
+            { flavor: 'Ruby Edition', image: 'hookah_ruby.png' }
+        ]
     }
 ];
 
@@ -332,6 +332,10 @@ async function setupDatabase() {
 
         // Create products table
         console.log('\n📋 Creating products table...');
+
+        // Drop the existing table to ensure schema updates like 'variations' column are applied
+        await client.query(`DROP TABLE IF EXISTS products CASCADE;`);
+
         await client.query(`
             CREATE TABLE IF NOT EXISTS products (
                 id VARCHAR(10) PRIMARY KEY,
@@ -346,7 +350,9 @@ async function setupDatabase() {
                 bg_path VARCHAR(255),
                 type VARCHAR(50),
                 features JSONB,
-                specifications JSONB,
+                is_out_of_stock BOOLEAN DEFAULT false,
+                variations JSONB,
+                gallery_images JSONB DEFAULT '[]',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -366,8 +372,8 @@ async function setupDatabase() {
             const query = `
                 INSERT INTO products (
                     id, title, category, price, original_price, rating, reviews,
-                    description, image_path, bg_path, type, features, specifications
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                    description, image_path, bg_path, type, features, is_out_of_stock, variations, gallery_images
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                 ON CONFLICT (id) DO UPDATE SET
                     title = EXCLUDED.title,
                     category = EXCLUDED.category,
@@ -380,7 +386,8 @@ async function setupDatabase() {
                     bg_path = EXCLUDED.bg_path,
                     type = EXCLUDED.type,
                     features = EXCLUDED.features,
-                    specifications = EXCLUDED.specifications,
+                    is_out_of_stock = EXCLUDED.is_out_of_stock,
+                    variations = EXCLUDED.variations,
                     updated_at = CURRENT_TIMESTAMP
             `;
 
@@ -397,7 +404,9 @@ async function setupDatabase() {
                 product.bgPath,
                 product.type,
                 JSON.stringify(product.features),
-                JSON.stringify(product.specifications)
+                product.is_out_of_stock || false,
+                JSON.stringify(product.variations || []),
+                JSON.stringify(product.gallery_images || [])
             ];
 
             await client.query(query, values);

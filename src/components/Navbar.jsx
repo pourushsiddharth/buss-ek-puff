@@ -41,7 +41,7 @@ const Navbar = ({ onNavigate }) => {
 
             <div style={{ display: 'none', gap: '2rem', alignItems: 'center' }} className="desktop-menu">
                 <a href="#vapes" style={{ fontWeight: 500, opacity: 0.8 }}>VAPES</a>
-                <a href="#mirrors" style={{ fontWeight: 500, opacity: 0.8 }}>MIRRORS</a>
+                <a href="#mirrors" style={{ fontWeight: 500, opacity: 0.8 }}>SHEESHA</a>
                 <a href="#about" style={{ fontWeight: 500, opacity: 0.8 }}>OUR STORY</a>
                 <ShoppingCart size={20} style={{ opacity: 0.8, cursor: 'pointer' }} />
             </div>
@@ -67,7 +67,7 @@ const Navbar = ({ onNavigate }) => {
                 </style>
                 <div className="desktop-links" style={{ display: 'none', gap: '2.5rem', alignItems: 'center' }}>
                     <a onClick={() => onNavigate('products')} className="nav-link">PRODUCTS</a>
-                    <a onClick={() => onNavigate('home', 'mirrors')} className="nav-link">MIRRORS</a>
+                    <a onClick={() => onNavigate('home', 'mirrors')} className="nav-link">SHEESHA</a>
                     <a onClick={() => onNavigate('about')} className="nav-link">ABOUT US</a>
                     <a onClick={() => onNavigate('contact')} className="nav-link">CONTACT</a>
                     <div style={{ height: '20px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
@@ -129,7 +129,7 @@ const Navbar = ({ onNavigate }) => {
                         }}
                     >
                         <a onClick={() => { onNavigate('products'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>PRODUCTS</a>
-                        <a onClick={() => { onNavigate('home', 'mirrors'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>MIRRORS</a>
+                        <a onClick={() => { onNavigate('home', 'mirrors'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>SHEESHA</a>
                         <a onClick={() => { onNavigate('about'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>ABOUT US</a>
                         <a onClick={() => { onNavigate('contact'); setIsMobileMenuOpen(false); }} className="nav-link" style={{ fontSize: '1.5rem' }}>CONTACT</a>
                         <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>

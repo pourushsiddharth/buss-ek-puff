@@ -30,6 +30,8 @@ const Hero = () => {
     const [slides, setSlides] = useState(defaultSlides);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isPaused, setIsPaused] = useState(false);
+    const [isManual, setIsManual] = useState(false);
 
     useEffect(() => {
         const fetchFeaturedProducts = async () => {
@@ -56,7 +58,8 @@ const Hero = () => {
                             cta: "VIEW PRODUCT",
                             productId: p.id,
                             isProduct: true,
-                            type: p.type
+                            type: p.type,
+                            is_out_of_stock: p.is_out_of_stock
                         };
                     });
 
@@ -72,29 +75,41 @@ const Hero = () => {
         fetchFeaturedProducts();
     }, []);
 
+    const autoNext = () => {
+        if (slides.length === 0) return;
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+    };
+
     const nextSlide = () => {
+        setIsManual(true);
         if (slides.length === 0) return;
         setCurrentSlide((prev) => (prev + 1) % slides.length);
     };
 
     const prevSlide = () => {
+        setIsManual(true);
         if (slides.length === 0) return;
         setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     };
 
     useEffect(() => {
-        if (slides.length > 1) {
+        if (slides.length > 1 && !isPaused && !isManual) {
             const timer = setInterval(() => {
-                nextSlide();
+                autoNext();
             }, 5000);
             return () => clearInterval(timer);
         }
-    }, [slides.length]);
+    }, [slides.length, isPaused, isManual]);
 
     const activeSlide = slides[currentSlide];
 
     return (
-        <section id="hero-section" style={{ height: '100vh', width: '100%', position: 'relative', overflow: 'hidden' }}>
+        <section
+            id="hero-section"
+            style={{ height: '100vh', width: '100%', position: 'relative', overflow: 'hidden' }}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+        >
             <style>
                 {`
                     @media (max-width: 768px) {
@@ -148,6 +163,28 @@ const Hero = () => {
                             >
                                 {activeSlide.subtitle}
                             </motion.span>
+
+                            {activeSlide.isProduct && activeSlide.is_out_of_stock && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    style={{
+                                        display: 'inline-block',
+                                        background: 'rgba(231, 76, 60, 0.2)',
+                                        color: '#e74c3c',
+                                        padding: '0.4rem 0.8rem',
+                                        borderRadius: '0.5rem',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 800,
+                                        letterSpacing: '1px',
+                                        textTransform: 'uppercase',
+                                        marginBottom: '1.5rem',
+                                        border: '1px solid rgba(231, 76, 60, 0.4)'
+                                    }}
+                                >
+                                    Out of Stock
+                                </motion.div>
+                            )}
 
                             <motion.h1
                                 initial={{ y: 30, opacity: 0 }}
@@ -250,12 +287,17 @@ const Hero = () => {
                 {slides.map((_, index) => (
                     <div
                         key={index}
+                        onClick={() => {
+                            setIsManual(true);
+                            setCurrentSlide(index);
+                        }}
                         style={{
                             width: index === currentSlide ? '40px' : '10px',
                             height: '4px',
                             background: index === currentSlide ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
                             transition: 'all 0.5s ease',
-                            borderRadius: '2px'
+                            borderRadius: '2px',
+                            cursor: 'pointer'
                         }}
                     />
                 ))}

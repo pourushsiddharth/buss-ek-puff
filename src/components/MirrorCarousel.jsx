@@ -41,7 +41,7 @@ const mirrorProducts = [
         id: 3,
         name: "STERLING SHIMMER",
         subtitle: "SILVER SOLACE",
-        description: "Sleek, silver-polished mirror base that captures every highlight of your room. Modern sophistication at its finest.",
+        description: "Sleek, silver-polished sheesha base that captures every highlight of your room. Modern sophistication at its finest.",
         price: "$219.99",
         image: silverImg,
         bgImage: bg3
@@ -50,7 +50,7 @@ const mirrorProducts = [
         id: 4,
         name: "GILDED GLORY",
         subtitle: "AURUM AURA",
-        description: "Indulge in the opulence of gold. This mirror base features a deep golden glow that adds a touch of royalty to your sessions.",
+        description: "Indulge in the opulence of gold. This sheesha base features a deep golden glow that adds a touch of royalty to your sessions.",
         price: "$299.99",
         image: goldImg,
         bgImage: bg4
@@ -59,35 +59,46 @@ const mirrorProducts = [
         id: 5,
         name: "DUO DYNASTY",
         subtitle: "METALLIC MASTERY",
-        description: "The best of both worlds. A harmonious blend of silver and gold accents on a mirror base, creating a dynamic visual experience.",
+        description: "The best of both worlds. A harmonious blend of silver and gold accents on a sheesha base, creating a dynamic visual experience.",
         price: "$329.99",
         image: silverGoldImg,
         bgImage: bg5
     },
     {
-        id: 6,
+        id: 'h6',
         name: "JADE JOURNEY",
         subtitle: "EMERALD ENCHANTMENT",
-        description: "A deep, mystical green mirror base that brings the essence of the forest to your home. Calm, cool, and collected.",
+        description: "A deep, mystical green sheesha base that brings the essence of the forest to your home. Calm, cool, and collected.",
         price: "$239.99",
         image: emeraldImg,
-        bgImage: bg1 // Reusing bg1
+        bgImage: bg1, // Reusing bg1
+        is_out_of_stock: true
     }
 ];
 
 const MirrorCarousel = ({ onProductView }) => {
     const [activeIdx, setActiveIdx] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [isManual, setIsManual] = useState(false);
 
-    const next = () => setActiveIdx((prev) => (prev + 1) % mirrorProducts.length);
-    const prev = () => setActiveIdx((prev) => (prev - 1 + mirrorProducts.length) % mirrorProducts.length);
+    const autoNext = () => setActiveIdx((prev) => (prev + 1) % mirrorProducts.length);
+
+    const next = () => {
+        setIsManual(true);
+        setActiveIdx((prev) => (prev + 1) % mirrorProducts.length);
+    };
+
+    const prev = () => {
+        setIsManual(true);
+        setActiveIdx((prev) => (prev - 1 + mirrorProducts.length) % mirrorProducts.length);
+    };
 
     useEffect(() => {
-        if (!isPaused) {
-            const interval = setInterval(next, 5000);
+        if (!isPaused && !isManual) {
+            const interval = setInterval(autoNext, 5000);
             return () => clearInterval(interval);
         }
-    }, [isPaused]);
+    }, [isPaused, isManual]);
 
     const activeMirror = mirrorProducts[activeIdx];
 
@@ -120,7 +131,7 @@ const MirrorCarousel = ({ onProductView }) => {
                         z-index: 10;
                     }
                     #mirrors .mirror-heading {
-                        font-size: clamp(4rem, 12vw, 9rem);
+                        font-size: clamp(3rem, 8vw, 6rem);
                         font-weight: 900;
                         line-height: 1;
                         background: linear-gradient(to bottom, #fff 0%, #a0a0a0 100%);
@@ -168,13 +179,13 @@ const MirrorCarousel = ({ onProductView }) => {
                             EXCLUSIVE COLLECTION
                         </motion.span>
                         <h2 style={{
-                            fontSize: 'clamp(3rem, 8vw, 6rem)',
+                            fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
                             fontWeight: 900,
                             color: 'white',
                             lineHeight: 1.1,
                             letterSpacing: '-2px',
                             textTransform: 'uppercase'
-                        }}>ELITE MIRROR SERIES</h2>
+                        }}>ELITE SHEESHA SERIES</h2>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <button onClick={prev} className="glass" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
@@ -203,9 +214,26 @@ const MirrorCarousel = ({ onProductView }) => {
                                     <div style={{ height: '1px', flex: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.1), transparent)' }} />
                                 </div>
                                 <h3 className="mirror-heading">{activeMirror.name}</h3>
+                                {activeMirror.is_out_of_stock && (
+                                    <div style={{
+                                        display: 'inline-block',
+                                        background: 'rgba(231, 76, 60, 0.2)',
+                                        color: '#e74c3c',
+                                        padding: '0.4rem 1rem',
+                                        borderRadius: '0.5rem',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 800,
+                                        letterSpacing: '2px',
+                                        textTransform: 'uppercase',
+                                        marginBottom: '1.5rem',
+                                        border: '1px solid rgba(231, 76, 60, 0.4)'
+                                    }}>
+                                        Out of Stock
+                                    </div>
+                                )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                    <Zap size={32} color="var(--accent)" />
-                                    <span style={{ color: 'white', fontWeight: 800, letterSpacing: '3px', fontSize: '2.5rem' }}>{activeMirror.subtitle}</span>
+                                    <Zap size={24} color="var(--accent)" />
+                                    <span style={{ color: 'white', fontWeight: 800, letterSpacing: '3px', fontSize: '1.8rem' }}>{activeMirror.subtitle}</span>
                                 </div>
                                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.2rem', lineHeight: 1.6, marginBottom: '3rem', maxWidth: '500px' }}>
                                     {activeMirror.description}
@@ -293,7 +321,10 @@ const MirrorCarousel = ({ onProductView }) => {
                     {mirrorProducts.map((_, idx) => (
                         <div
                             key={idx}
-                            onClick={() => setActiveIdx(idx)}
+                            onClick={() => {
+                                setIsManual(true);
+                                setActiveIdx(idx);
+                            }}
                             style={{
                                 width: activeIdx === idx ? '60px' : '30px',
                                 height: '4px',

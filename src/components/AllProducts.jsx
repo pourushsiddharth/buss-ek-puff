@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Filter, X, Search, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import API_URL from '../config';
+import { allProducts } from '../data/products';
 
 const AllProducts = ({ onProductView }) => {
     const [products, setProducts] = useState([]);
@@ -33,9 +34,14 @@ const AllProducts = ({ onProductView }) => {
                     }));
 
                     setProducts(processedProducts);
+                } else {
+                    console.warn('API response not ok, falling back to static data');
+                    setProducts(allProducts);
                 }
             } catch (err) {
                 console.error('Error fetching products:', err);
+                console.warn('Falling back to static data due to error');
+                setProducts(allProducts);
             } finally {
                 setLoading(false);
             }
@@ -76,8 +82,26 @@ const AllProducts = ({ onProductView }) => {
 
     if (loading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', color: 'white' }}>
-                <RefreshCw className="animate-spin" size={48} />
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#000',
+                color: 'white',
+                flexDirection: 'column',
+                gap: '1rem'
+            }}>
+                <img
+                    src="/assets/loading.gif"
+                    alt="Loading..."
+                    style={{
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'contain',
+                        opacity: 0.8
+                    }}
+                />
             </div>
         );
     }
@@ -479,6 +503,27 @@ const AllProducts = ({ onProductView }) => {
                                     />
                                 </div>
 
+                                {/* Out of Stock Badge */}
+                                {product.is_out_of_stock && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '1.5rem',
+                                        left: '1.5rem',
+                                        padding: '0.5rem 1rem',
+                                        background: 'rgba(231, 76, 60, 0.2)',
+                                        border: '1px solid rgba(231, 76, 60, 0.4)',
+                                        borderRadius: '2rem',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 800,
+                                        letterSpacing: '1px',
+                                        color: '#e74c3c',
+                                        textTransform: 'uppercase',
+                                        zIndex: 10
+                                    }}>
+                                        Out of Stock
+                                    </div>
+                                )}
+
                                 {/* Category Badge */}
                                 <div style={{
                                     position: 'absolute',
@@ -566,19 +611,21 @@ const AllProducts = ({ onProductView }) => {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                if (product.is_out_of_stock) return;
                                                 addToCart(product);
                                                 setIsCartOpen(true);
                                             }}
+                                            disabled={product.is_out_of_stock}
                                             style={{
                                                 flex: 1,
                                                 padding: '1rem',
-                                                background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
+                                                background: product.is_out_of_stock ? 'rgba(255, 255, 255, 0.1)' : 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
                                                 border: 'none',
                                                 borderRadius: '1rem',
-                                                color: 'white',
+                                                color: product.is_out_of_stock ? 'rgba(255, 255, 255, 0.4)' : 'white',
                                                 fontWeight: 600,
                                                 fontSize: '0.95rem',
-                                                cursor: 'pointer',
+                                                cursor: product.is_out_of_stock ? 'not-allowed' : 'pointer',
                                                 transition: 'all 0.3s ease',
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -586,16 +633,20 @@ const AllProducts = ({ onProductView }) => {
                                                 gap: '0.5rem'
                                             }}
                                             onMouseEnter={(e) => {
-                                                e.target.style.transform = 'translateY(-2px)';
-                                                e.target.style.boxShadow = '0 10px 25px rgba(138, 43, 226, 0.4)';
+                                                if (!product.is_out_of_stock) {
+                                                    e.target.style.transform = 'translateY(-2px)';
+                                                    e.target.style.boxShadow = '0 10px 25px rgba(138, 43, 226, 0.4)';
+                                                }
                                             }}
                                             onMouseLeave={(e) => {
-                                                e.target.style.transform = 'translateY(0)';
-                                                e.target.style.boxShadow = 'none';
+                                                if (!product.is_out_of_stock) {
+                                                    e.target.style.transform = 'translateY(0)';
+                                                    e.target.style.boxShadow = 'none';
+                                                }
                                             }}
                                         >
                                             <ShoppingCart size={18} />
-                                            Add to Cart
+                                            {product.is_out_of_stock ? 'Out of Stock' : 'Add to Cart'}
                                         </button>
                                         <button
                                             style={{

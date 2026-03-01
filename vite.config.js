@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'https://buss-ek-puff.vercel.app/'
+      '/api': 'http://localhost:3001'
     }
   }
 })

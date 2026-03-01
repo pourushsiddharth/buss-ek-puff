@@ -413,6 +413,41 @@ app.patch('/api/orders/:orderNumber/status', async (req, res) => {
     }
 });
 
+// Run startup migration to add any missing columns
+async function runMigrations() {
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+    try {
+        await client.connect();
+        await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]';`);
+        console.log('✅ DB migration: gallery_images column ready');
+
+        // Create accessories table if it doesn't exist
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS accessories (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                category VARCHAR(100) DEFAULT 'General',
+                price VARCHAR(50),
+                original_price VARCHAR(50),
+                description TEXT DEFAULT '',
+                image_url TEXT DEFAULT '',
+                is_available BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+        console.log('✅ DB migration: accessories table ready');
+    } catch (err) {
+        console.warn('⚠️ Migration warning (non-fatal):', err.message);
+    } finally {
+        await client.end();
+    }
+}
+runMigrations();
+
 // Product Endpoints
 app.get('/api/products', async (req, res) => {
     const client = new Client({
@@ -424,8 +459,12 @@ app.get('/api/products', async (req, res) => {
         const result = await client.query('SELECT * FROM products ORDER BY created_at DESC');
         res.json({ success: true, products: result.rows });
     } catch (error) {
-        console.error('Error fetching products:', error);
-        res.status(500).json({ error: 'Failed to fetch products' });
+        console.error('❌ Database Error (fetching products):', error);
+        res.status(500).json({
+            error: 'Failed to fetch products from database',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            fallback: 'Using static fallback data'
+        });
     } finally {
         await client.end();
     }
@@ -437,14 +476,14 @@ app.post('/api/products', async (req, res) => {
         ssl: { rejectUnauthorized: false }
     });
     try {
-        const { id, title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, features, specifications, is_featured, cover_image_path } = req.body;
+        const { id, title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, features, is_out_of_stock, variations, is_featured, cover_image_path, gallery_images } = req.body;
         await client.connect();
         const query = `
-            INSERT INTO products (id, title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, features, specifications, is_featured, cover_image_path)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            INSERT INTO products (id, title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, features, is_out_of_stock, variations, is_featured, cover_image_path, gallery_images)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
             RETURNING *;
         `;
-        const values = [id, title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, JSON.stringify(features), JSON.stringify(specifications), is_featured || false, cover_image_path];
+        const values = [id, title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, JSON.stringify(features), is_out_of_stock || false, JSON.stringify(variations || []), is_featured || false, cover_image_path, JSON.stringify(gallery_images || [])];
         const result = await client.query(query, values);
         res.status(201).json({ success: true, product: result.rows[0] });
     } catch (error) {
@@ -462,15 +501,15 @@ app.put('/api/products/:id', async (req, res) => {
         ssl: { rejectUnauthorized: false }
     });
     try {
-        const { title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, features, specifications, is_featured, cover_image_path } = req.body;
+        const { title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, features, is_out_of_stock, variations, is_featured, cover_image_path, gallery_images } = req.body;
         await client.connect();
         const query = `
             UPDATE products
-            SET title=$1, category=$2, price=$3, original_price=$4, rating=$5, reviews=$6, description=$7, type=$8, image_path=$9, bg_path=$10, features=$11, specifications=$12, is_featured=$14, cover_image_path=$15, updated_at=NOW()
-            WHERE id=$13
+            SET title=$1, category=$2, price=$3, original_price=$4, rating=$5, reviews=$6, description=$7, type=$8, image_path=$9, bg_path=$10, features=$11, is_out_of_stock=$12, variations=$13, is_featured=$15, cover_image_path=$16, gallery_images=$17, updated_at=NOW()
+            WHERE id=$14
             RETURNING *;
         `;
-        const values = [title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, JSON.stringify(features), JSON.stringify(specifications), id, is_featured || false, cover_image_path];
+        const values = [title, category, price, original_price, rating, reviews, description, type, image_path, bg_path, JSON.stringify(features), is_out_of_stock || false, JSON.stringify(variations || []), id, is_featured || false, cover_image_path, JSON.stringify(gallery_images || [])];
         const result = await client.query(query, values);
         res.json({ success: true, product: result.rows[0] });
     } catch (error) {
@@ -494,6 +533,146 @@ app.delete('/api/products/:id', async (req, res) => {
     } catch (error) {
         console.error('Error deleting product:', error);
         res.status(500).json({ error: 'Failed to delete product' });
+    } finally {
+        await client.end();
+    }
+});
+
+// Upload a single gallery image for a product
+app.post('/api/products/:id/gallery', upload.single('image'), async (req, res) => {
+    const { id } = req.params;
+    if (!req.file) return res.status(400).json({ error: 'No image file provided' });
+
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+    try {
+        let imageUrl;
+        if (process.env.NODE_ENV === 'production') {
+            imageUrl = req.file.path; // Cloudinary URL
+        } else {
+            imageUrl = `/uploads/${req.file.filename}`;
+        }
+
+        await client.connect();
+        // Append new image URL to gallery_images array
+        const result = await client.query(
+            `UPDATE products
+             SET gallery_images = COALESCE(gallery_images, '[]'::jsonb) || $1::jsonb, updated_at=NOW()
+             WHERE id = $2
+             RETURNING gallery_images`,
+            [JSON.stringify([imageUrl]), id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+        res.json({ success: true, imageUrl, gallery_images: result.rows[0].gallery_images });
+    } catch (error) {
+        console.error('Error adding gallery image:', error);
+        res.status(500).json({ error: 'Failed to add gallery image' });
+    } finally {
+        await client.end();
+    }
+});
+
+// Delete a gallery image at a specific index
+app.delete('/api/products/:id/gallery/:index', async (req, res) => {
+    const { id, index } = req.params;
+    const idx = parseInt(index);
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+    try {
+        await client.connect();
+        // Fetch current gallery
+        const current = await client.query('SELECT gallery_images FROM products WHERE id=$1', [id]);
+        if (current.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+        let gallery = current.rows[0].gallery_images || [];
+        if (typeof gallery === 'string') gallery = JSON.parse(gallery);
+        gallery.splice(idx, 1);
+        const result = await client.query(
+            `UPDATE products SET gallery_images=$1, updated_at=NOW() WHERE id=$2 RETURNING gallery_images`,
+            [JSON.stringify(gallery), id]
+        );
+        res.json({ success: true, gallery_images: result.rows[0].gallery_images });
+    } catch (error) {
+        console.error('Error removing gallery image:', error);
+        res.status(500).json({ error: 'Failed to remove gallery image' });
+    } finally {
+        await client.end();
+    }
+});
+
+
+// Dynamic SEO Page for Shared Products
+app.get('/p/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
+    try {
+        await client.connect();
+        const query = 'SELECT * FROM products WHERE id = $1';
+        const result = await client.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).send('Product not found');
+        }
+
+        const product = result.rows[0];
+
+        let imageUrl = product.image_path || product.image || '';
+        if (imageUrl && !imageUrl.startsWith('http')) {
+            const baseUrl = process.env.NODE_ENV === 'production' ? 'https://buss-ek-puff.vercel.app' : `http://localhost:${PORT}`;
+            if (imageUrl.startsWith('/assets/')) {
+                imageUrl = `${baseUrl}${imageUrl}`;
+            } else if (!imageUrl.startsWith('/')) {
+                imageUrl = `${baseUrl}/assets/${imageUrl}`;
+            } else {
+                imageUrl = `${baseUrl}${imageUrl}`;
+            }
+        }
+
+        const pageUrl = process.env.NODE_ENV === 'production'
+            ? `https://buss-ek-puff.vercel.app/p/${id}`
+            : `http://localhost:${PORT}/p/${id}`;
+
+        const redirectUrl = `/?product=${id}`;
+
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${product.title} - Buss Ek Puff</title>
+    <meta name="description" content="${product.description}">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${pageUrl}">
+    <meta property="og:title" content="${product.title} - Buss Ek Puff">
+    <meta property="og:description" content="${product.description}">
+    <meta property="og:image" content="${imageUrl}">
+    
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="${pageUrl}">
+    <meta property="twitter:title" content="${product.title} - Buss Ek Puff">
+    <meta property="twitter:description" content="${product.description}">
+    <meta property="twitter:image" content="${imageUrl}">
+    
+    <script>
+        window.location.href = "${redirectUrl}";
+    </script>
+</head>
+<body style="background-color: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+    <div>Redirecting to product...<br><a href="${redirectUrl}" style="color: #8A2BE2;">Click here if you are not redirected</a></div>
+</body>
+</html>`;
+        res.send(html);
+    } catch (error) {
+        console.error('Error generating SEO page:', error);
+        res.status(500).send('Internal Server Error');
     } finally {
         await client.end();
     }
@@ -577,6 +756,83 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         imageUrl: imageUrl,
         filename: req.file.filename || req.file.originalname
     });
+});
+
+// ============================
+// ACCESSORIES ENDPOINTS
+// ============================
+
+// Get All Accessories
+app.get('/api/accessories', async (req, res) => {
+    const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    try {
+        await client.connect();
+        const result = await client.query('SELECT * FROM accessories ORDER BY created_at DESC');
+        res.json({ success: true, accessories: result.rows });
+    } catch (error) {
+        console.error('Error fetching accessories:', error);
+        res.status(500).json({ error: 'Failed to fetch accessories', message: error.message });
+    } finally {
+        await client.end();
+    }
+});
+
+// Add Accessory
+app.post('/api/accessories', async (req, res) => {
+    const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    try {
+        const { name, category, price, original_price, description, image_url, is_available } = req.body;
+        await client.connect();
+        const result = await client.query(
+            `INSERT INTO accessories (name, category, price, original_price, description, image_url, is_available, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING *`,
+            [name, category, price, original_price || null, description || '', image_url || '', is_available !== false]
+        );
+        res.status(201).json({ success: true, accessory: result.rows[0] });
+    } catch (error) {
+        console.error('Error adding accessory:', error);
+        res.status(500).json({ error: 'Failed to add accessory', message: error.message });
+    } finally {
+        await client.end();
+    }
+});
+
+// Update Accessory
+app.put('/api/accessories/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    try {
+        const { name, category, price, original_price, description, image_url, is_available } = req.body;
+        await client.connect();
+        const result = await client.query(
+            `UPDATE accessories SET name=$1, category=$2, price=$3, original_price=$4, description=$5, image_url=$6, is_available=$7, updated_at=NOW()
+             WHERE id=$8 RETURNING *`,
+            [name, category, price, original_price || null, description || '', image_url || '', is_available !== false, id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Accessory not found' });
+        res.json({ success: true, accessory: result.rows[0] });
+    } catch (error) {
+        console.error('Error updating accessory:', error);
+        res.status(500).json({ error: 'Failed to update accessory', message: error.message });
+    } finally {
+        await client.end();
+    }
+});
+
+// Delete Accessory
+app.delete('/api/accessories/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    try {
+        await client.connect();
+        await client.query('DELETE FROM accessories WHERE id=$1', [id]);
+        res.json({ success: true, message: 'Accessory deleted' });
+    } catch (error) {
+        console.error('Error deleting accessory:', error);
+        res.status(500).json({ error: 'Failed to delete accessory' });
+    } finally {
+        await client.end();
+    }
 });
 
 if (process.env.NODE_ENV !== 'production') {

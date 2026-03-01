@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, ShoppingCart, Star, Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ShoppingCart, Star, Check, ChevronLeft, ChevronRight, RefreshCw, Share2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import API_URL from '../config';
 import contactusBg from '../assets/contactus_bg.png';
+import { allProducts } from '../data/products';
 
 const ProductDetail = ({ productId, onBack, onProductView }) => {
     const { addToCart, setIsCartOpen } = useCart();
     const [displayProduct, setDisplayProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [recommendedProducts, setRecommendedProducts] = useState([]);
+    const [selectedVariation, setSelectedVariation] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -20,16 +23,33 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                     const product = data.products.find(p => String(p.id) === String(productId));
 
                     // Create a helper to resolve image path
-                    if (product) {
-                        const getImageUrl = (path) => {
-                            if (!path) return '';
-                            if (path.startsWith('http') || path.startsWith('/')) return path;
-                            return `/assets/${path}`;
-                        };
+                    const getImageUrl = (path) => {
+                        if (!path) return '';
+                        if (typeof path !== 'string') return path;
+                        if (path.startsWith('http') || path.startsWith('/')) return path;
+                        return `/assets/${path}`;
+                    };
 
+                    if (product) {
                         // Normalize product data from DB
                         product.image = getImageUrl(product.image_path || product.image);
                         product.bg = getImageUrl(product.bg_path || product.bg);
+
+                        if (typeof product.variations === 'string') {
+                            try {
+                                product.variations = JSON.parse(product.variations);
+                            } catch (e) {
+                                product.variations = [];
+                            }
+                        }
+
+                        if (product.variations && Array.isArray(product.variations)) {
+                            product.variations.forEach(v => {
+                                if (v.image) {
+                                    v.image = getImageUrl(v.image);
+                                }
+                            });
+                        }
 
                         // Fix recommended products too if they lack image handling
                         data.products.forEach(p => {
@@ -38,15 +58,35 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                     }
 
                     setDisplayProduct(product);
+                    setSelectedVariation(null);
+                    setSelectedImage(product ? getImageUrl(product.image_path || product.image) : null);
 
                     if (product) {
                         setRecommendedProducts(data.products
                             .filter(p => p.id !== product.id && p.type === product.type)
                             .slice(0, 4));
                     }
+                } else {
+                    console.warn('API response not ok, falling back to static data');
+                    const product = allProducts.find(p => String(p.id) === String(productId));
+                    setDisplayProduct(product);
+                    if (product) {
+                        setRecommendedProducts(allProducts
+                            .filter(p => p.id !== product.id && p.type === product.type)
+                            .slice(0, 4));
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching product details:', err);
+                console.warn('Falling back to static data due to error');
+                const product = allProducts.find(p => String(p.id) === String(productId));
+                setDisplayProduct(product);
+                setSelectedImage(product ? (product.image || null) : null);
+                if (product) {
+                    setRecommendedProducts(allProducts
+                        .filter(p => p.id !== product.id && p.type === product.type)
+                        .slice(0, 4));
+                }
             } finally {
                 setLoading(false);
             }
@@ -56,8 +96,26 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
 
     if (loading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', color: 'white' }}>
-                <RefreshCw className="animate-spin" size={48} />
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#000',
+                color: 'white',
+                gap: '1rem'
+            }}>
+                <img
+                    src="/assets/loading.gif"
+                    alt="Loading..."
+                    style={{
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'contain',
+                        opacity: 0.8
+                    }}
+                />
             </div>
         );
     }
@@ -67,6 +125,31 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
     const whatsappNumber = '919334807758';
     const whatsappMessage = `Hi! I'm interested in ordering ${displayProduct.title}`;
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/?product=${displayProduct.id}`;
+        const shareData = {
+            title: `${displayProduct.title} - Buss Ek Puff`,
+            text: `Check out ${displayProduct.title} at Buss Ek Puff!`,
+            url: shareUrl,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                alert('Link copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy link:', err);
+                alert('Failed to copy link.');
+            }
+        }
+    };
 
 
     return (
@@ -211,8 +294,46 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                     className="glass-card"
-                    style={{ padding: '3rem' }}
+                    style={{ padding: '3rem', position: 'relative' }}
                 >
+                    {/* Top Right Share Button */}
+                    <button
+                        onClick={handleShare}
+                        style={{
+                            position: 'absolute',
+                            top: '2rem',
+                            right: '2rem',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '50%',
+                            width: '50px',
+                            height: '50px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            zIndex: 20,
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                        }}
+                        title="Share Product"
+                        aria-label="Share Product"
+                    >
+                        <Share2 size={22} />
+                    </button>
+
                     <div className="product-grid" style={{
                         display: 'grid',
                         gridTemplateColumns: '1fr 1.2fr',
@@ -235,19 +356,79 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                                     justifyContent: 'center'
                                 }}
                             >
-                                <img
-                                    src={displayProduct.image}
-                                    alt={displayProduct.title}
-                                    style={{
-                                        width: '100%',
-                                        height: 'auto',
-                                        maxHeight: '500px',
-                                        objectFit: 'contain',
-                                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))',
-                                        borderRadius: '1.5rem'
-                                    }}
-                                />
+                                <AnimatePresence mode="wait">
+                                    <motion.img
+                                        key={selectedVariation?.image || selectedImage || displayProduct.image}
+                                        src={selectedVariation && selectedVariation.image ? selectedVariation.image : (selectedImage || displayProduct.image)}
+                                        alt={displayProduct.title}
+                                        initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                                        transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                        style={{
+                                            width: '100%',
+                                            height: 'auto',
+                                            maxHeight: '500px',
+                                            objectFit: 'contain',
+                                            filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))',
+                                            borderRadius: '1.5rem',
+                                            display: 'block'
+                                        }}
+                                    />
+                                </AnimatePresence>
                             </motion.div>
+
+                            {/* Gallery Thumbnails */}
+                            {(() => {
+                                let galleryImages = [];
+                                try {
+                                    const raw = displayProduct.gallery_images;
+                                    galleryImages = typeof raw === 'string' ? JSON.parse(raw) : (raw || []);
+                                } catch (e) { galleryImages = []; }
+
+                                const getUrl = (path) => {
+                                    if (!path) return '';
+                                    if (typeof path !== 'string') return path;
+                                    if (path.startsWith('http') || path.startsWith('/')) return path;
+                                    return `/assets/${path}`;
+                                };
+
+                                const mainImgUrl = getUrl(displayProduct.image_path || displayProduct.image);
+                                const allThumbs = [mainImgUrl, ...galleryImages.map(getUrl)].filter(Boolean);
+
+                                if (allThumbs.length <= 1) return null;
+
+                                return (
+                                    <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                        {allThumbs.map((thumb, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => setSelectedImage(thumb)}
+                                                style={{
+                                                    width: '72px',
+                                                    height: '72px',
+                                                    border: `2px solid ${(selectedImage === thumb || (!selectedImage && i === 0)) ? '#8A2BE2' : 'rgba(255,255,255,0.1)'}`,
+                                                    borderRadius: '0.8rem',
+                                                    overflow: 'hidden',
+                                                    cursor: 'pointer',
+                                                    padding: 0,
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    transition: 'border-color 0.2s ease, transform 0.2s ease',
+                                                    transform: (selectedImage === thumb || (!selectedImage && i === 0)) ? 'scale(1.1)' : 'scale(1)',
+                                                    boxShadow: (selectedImage === thumb || (!selectedImage && i === 0)) ? '0 0 12px rgba(138,43,226,0.5)' : 'none'
+                                                }}
+                                            >
+                                                <img
+                                                    src={thumb}
+                                                    alt={`View ${i + 1}`}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
                         </div>
 
                         {/* Product Info Section */}
@@ -268,6 +449,29 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                             >
                                 {displayProduct.category}
                             </motion.div>
+
+                            {/* Out of Stock Badge */}
+                            {displayProduct.is_out_of_stock && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    style={{
+                                        display: 'inline-block',
+                                        background: 'rgba(231, 76, 60, 0.2)',
+                                        color: '#e74c3c',
+                                        padding: '0.4rem 0.8rem',
+                                        borderRadius: '0.5rem',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 800,
+                                        letterSpacing: '1px',
+                                        textTransform: 'uppercase',
+                                        marginBottom: '1rem',
+                                        border: '1px solid rgba(231, 76, 60, 0.4)'
+                                    }}
+                                >
+                                    Out of Stock
+                                </motion.div>
+                            )}
 
                             {/* Title */}
                             <motion.h1
@@ -413,6 +617,68 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                                 </div>
                             </motion.div>
 
+                            {/* Variations Selector */}
+                            {displayProduct.variations && displayProduct.variations.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.85 }}
+                                    style={{ marginBottom: '3rem' }}
+                                >
+                                    <h3 style={{
+                                        fontSize: '1.2rem',
+                                        fontWeight: 700,
+                                        marginBottom: '1.5rem',
+                                        color: 'white'
+                                    }}>
+                                        Select Flavor
+                                    </h3>
+                                    <div style={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '1rem'
+                                    }}>
+                                        {displayProduct.variations.map((variation, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setSelectedVariation(variation)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.75rem',
+                                                    padding: '0.75rem 1.2rem',
+                                                    background: selectedVariation?.flavor === variation.flavor ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                    border: `1px solid ${selectedVariation?.flavor === variation.flavor ? '#8A2BE2' : 'rgba(255, 255, 255, 0.1)'}`,
+                                                    borderRadius: '1rem',
+                                                    color: selectedVariation?.flavor === variation.flavor ? '#8A2BE2' : 'white',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.3s ease',
+                                                    outline: 'none'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (selectedVariation?.flavor !== variation.flavor) {
+                                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (selectedVariation?.flavor !== variation.flavor) {
+                                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                                    }
+                                                }}
+                                            >
+                                                {variation.flavor}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {!selectedVariation && (
+                                        <div style={{ color: '#ff4757', fontSize: '0.85rem', marginTop: '0.75rem', fontWeight: 600 }}>
+                                            * Please select a flavor to add to cart
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
                             {/* Action Buttons */}
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -427,68 +693,88 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                                 {/* Add to Cart Button */}
                                 <button
                                     onClick={() => {
-                                        addToCart(displayProduct);
+                                        if (displayProduct.is_out_of_stock) return;
+                                        if (displayProduct.variations && displayProduct.variations.length > 0 && !selectedVariation) {
+                                            alert("Please select a flavor before adding to cart.");
+                                            return;
+                                        }
+                                        const productToAdd = selectedVariation
+                                            ? { ...displayProduct, selectedVariation }
+                                            : displayProduct;
+                                        addToCart(productToAdd);
                                         setIsCartOpen(true);
                                     }}
+                                    disabled={displayProduct.is_out_of_stock}
                                     style={{
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '1rem',
                                         padding: '1.2rem 3rem',
                                         borderRadius: '3rem',
-                                        background: 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
-                                        color: 'white',
+                                        background: displayProduct.is_out_of_stock ? 'rgba(255, 71, 87, 0.1)' : 'linear-gradient(135deg, #8A2BE2 0%, #6A1BB2 100%)',
+                                        color: displayProduct.is_out_of_stock ? '#ff4757' : 'white',
                                         fontWeight: 700,
                                         fontSize: '1.1rem',
-                                        border: 'none',
-                                        cursor: 'pointer',
+                                        border: displayProduct.is_out_of_stock ? '2px solid #ff4757' : 'none',
+                                        cursor: displayProduct.is_out_of_stock ? 'not-allowed' : 'pointer',
                                         letterSpacing: '1px',
-                                        boxShadow: '0 10px 30px rgba(138, 43, 226, 0.4)',
+                                        boxShadow: displayProduct.is_out_of_stock ? 'none' : '0 10px 30px rgba(138, 43, 226, 0.4)',
                                         transition: 'all 0.3s ease'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.transform = 'translateY(-2px)';
-                                        e.target.style.boxShadow = '0 15px 40px rgba(138, 43, 226, 0.6)';
+                                        if (!displayProduct.is_out_of_stock) {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 15px 40px rgba(138, 43, 226, 0.6)';
+                                        }
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.transform = 'translateY(0)';
-                                        e.target.style.boxShadow = '0 10px 30px rgba(138, 43, 226, 0.4)';
+                                        if (!displayProduct.is_out_of_stock) {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 10px 30px rgba(138, 43, 226, 0.4)';
+                                        }
                                     }}
                                 >
                                     <ShoppingCart size={22} />
-                                    Add to Cart
+                                    {displayProduct.is_out_of_stock ? 'Out of Stock' : 'Add to Cart'}
                                 </button>
 
                                 {/* WhatsApp Order Button */}
                                 <a
-                                    href={whatsappLink}
-                                    target="_blank"
+                                    href={displayProduct.is_out_of_stock ? '#' : whatsappLink}
+                                    target={displayProduct.is_out_of_stock ? '_self' : '_blank'}
                                     rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                        if (displayProduct.is_out_of_stock) e.preventDefault();
+                                    }}
                                     style={{
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '1rem',
                                         padding: '1.2rem 3rem',
                                         borderRadius: '3rem',
-                                        background: 'rgba(37, 211, 102, 0.1)',
-                                        border: '2px solid #25D366',
-                                        color: '#25D366',
+                                        background: displayProduct.is_out_of_stock ? 'rgba(255,255,255,0.05)' : 'rgba(37, 211, 102, 0.1)',
+                                        border: `2px solid ${displayProduct.is_out_of_stock ? 'rgba(255,255,255,0.1)' : '#25D366'}`,
+                                        color: displayProduct.is_out_of_stock ? 'rgba(255,255,255,0.3)' : '#25D366',
                                         fontWeight: 700,
                                         fontSize: '1.1rem',
                                         textDecoration: 'none',
-                                        cursor: 'pointer',
+                                        cursor: displayProduct.is_out_of_stock ? 'not-allowed' : 'pointer',
                                         letterSpacing: '1px',
                                         transition: 'all 0.3s ease'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.background = '#25D366';
-                                        e.target.style.color = 'white';
-                                        e.target.style.transform = 'translateY(-2px)';
+                                        if (!displayProduct.is_out_of_stock) {
+                                            e.currentTarget.style.background = '#25D366';
+                                            e.currentTarget.style.color = 'white';
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.background = 'rgba(37, 211, 102, 0.1)';
-                                        e.target.style.color = '#25D366';
-                                        e.target.style.transform = 'translateY(0)';
+                                        if (!displayProduct.is_out_of_stock) {
+                                            e.currentTarget.style.background = 'rgba(37, 211, 102, 0.1)';
+                                            e.currentTarget.style.color = '#25D366';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }
                                     }}
                                 >
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -500,60 +786,7 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                         </div>
                     </div>
 
-                    {/* Specifications */}
-                    {displayProduct.specifications && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1 }}
-                            style={{
-                                marginTop: '4rem',
-                                paddingTop: '3rem',
-                                borderTop: '1px solid rgba(255,255,255,0.1)'
-                            }}
-                        >
-                            <h3 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: 700,
-                                marginBottom: '2rem',
-                                color: 'white'
-                            }}>
-                                Specifications
-                            </h3>
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                                gap: '1.5rem'
-                            }}>
-                                {Object.entries(displayProduct.specifications).map(([key, value]) => (
-                                    <div key={key} style={{
-                                        background: 'rgba(255, 255, 255, 0.02)',
-                                        padding: '1.5rem',
-                                        borderRadius: '1rem',
-                                        border: '1px solid rgba(255,255,255,0.05)'
-                                    }}>
-                                        <div style={{
-                                            fontSize: '0.8rem',
-                                            color: 'rgba(255,255,255,0.5)',
-                                            marginBottom: '0.5rem',
-                                            fontWeight: 600,
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '1px'
-                                        }}>
-                                            {key}
-                                        </div>
-                                        <div style={{
-                                            fontSize: '1.1rem',
-                                            color: 'white',
-                                            fontWeight: 600
-                                        }}>
-                                            {value}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
+
                 </motion.div>
 
                 {/* Recommendations Section */}
@@ -628,6 +861,27 @@ const ProductDetail = ({ productId, onBack, onProductView }) => {
                                         }}
                                     />
                                 </div>
+
+                                {/* Out of Stock Badge */}
+                                {item.is_out_of_stock && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '1rem',
+                                        left: '1rem',
+                                        padding: '0.3rem 0.6rem',
+                                        background: 'rgba(231, 76, 60, 0.2)',
+                                        border: '1px solid rgba(231, 76, 60, 0.4)',
+                                        borderRadius: '2rem',
+                                        fontSize: '0.6rem',
+                                        fontWeight: 800,
+                                        letterSpacing: '1px',
+                                        color: '#e74c3c',
+                                        textTransform: 'uppercase',
+                                        zIndex: 10
+                                    }}>
+                                        Out of Stock
+                                    </div>
+                                )}
 
                                 {/* Category */}
                                 <div style={{

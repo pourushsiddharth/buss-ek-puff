@@ -118,7 +118,7 @@ const Cart = ({ onCheckout }) => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     {cart.map((item) => (
                                         <motion.div
-                                            key={item.id}
+                                            key={item.cartItemId || item.id}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, x: 100 }}
@@ -163,6 +163,16 @@ const Cart = ({ onCheckout }) => {
                                                 }}>
                                                     {item.title}
                                                 </h4>
+                                                {item.selectedVariation && (
+                                                    <p style={{
+                                                        fontSize: '0.85rem',
+                                                        color: '#8A2BE2',
+                                                        marginBottom: '0.25rem',
+                                                        fontWeight: 600
+                                                    }}>
+                                                        Flavor: {item.selectedVariation.flavor}
+                                                    </p>
+                                                )}
                                                 <p style={{
                                                     fontSize: '0.8rem',
                                                     color: 'rgba(255, 255, 255, 0.5)',
@@ -185,7 +195,7 @@ const Cart = ({ onCheckout }) => {
                                                         padding: '0.25rem'
                                                     }}>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.cartItemId || item.id, item.quantity - 1)}
                                                             style={{
                                                                 background: 'rgba(255, 255, 255, 0.1)',
                                                                 border: 'none',
@@ -213,7 +223,7 @@ const Cart = ({ onCheckout }) => {
                                                             {item.quantity}
                                                         </span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                            onClick={() => updateQuantity(item.cartItemId || item.id, item.quantity + 1)}
                                                             style={{
                                                                 background: 'rgba(255, 255, 255, 0.1)',
                                                                 border: 'none',
@@ -246,7 +256,7 @@ const Cart = ({ onCheckout }) => {
 
                                             {/* Remove Button */}
                                             <button
-                                                onClick={() => removeFromCart(item.id)}
+                                                onClick={() => removeFromCart(item.cartItemId || item.id)}
                                                 style={{
                                                     background: 'rgba(255, 0, 0, 0.1)',
                                                     border: 'none',

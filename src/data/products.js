@@ -45,7 +45,8 @@ export const allProducts = [
             'E-liquid Capacity': '12ml',
             'Puff Count': '5000+ puffs',
             'Flavor': 'Dark Berry Blend'
-        }
+        },
+        gallery_images: [product2, product3, product4, product5]
     },
     {
         id: 'v2',
@@ -132,6 +133,35 @@ export const allProducts = [
         }
     },
     {
+        id: 6,
+        title: "Jade Journey",
+        category: "PREMIUM VAPE",
+        type: "Vape",
+        price: "₹3,299",
+        originalPrice: "₹4,499",
+        description: "An exotic escape with refreshing green melon and cooling mint. Pure bliss in every puff.",
+        image: product5,
+        bg: product5_bg,
+        rating: 4.8,
+        reviews: 215,
+        is_out_of_stock: true,
+        features: [
+            'Fresh Mint Flavor',
+            '5000+ Puffs Capacity',
+            'Cooling Sensation',
+            'Natural Mint Extract',
+            'Sleek Green Design',
+            'Refreshing Aftertaste'
+        ],
+        specifications: {
+            'Nicotine Strength': '5% (50mg)',
+            'Battery': '650mAh Rechargeable',
+            'E-liquid Capacity': '12ml',
+            'Puff Count': '5000+ puffs',
+            'Flavor': 'Green Melon & Mint'
+        }
+    },
+    {
         id: 'v5',
         title: 'EMERALD MINT',
         category: 'PREMIUM VAPE',
@@ -172,7 +202,7 @@ export const allProducts = [
         bg: product1_bg,
         type: 'Hookah',
         features: [
-            'Premium Ruby Mirror Finish',
+            'Premium Ruby Sheesha Finish',
             'Hand-Crafted Design',
             'Superior Smoke Quality',
             'Durable Construction',
@@ -182,7 +212,7 @@ export const allProducts = [
         specifications: {
             'Height': '24 inches',
             'Material': 'Stainless Steel & Glass',
-            'Finish': 'Ruby Mirror',
+            'Finish': 'Ruby Sheesha',
             'Hose Length': '72 inches',
             'Bowl Type': 'Premium Ceramic'
         }
@@ -223,12 +253,12 @@ export const allProducts = [
         originalPrice: '₹15,999',
         rating: 4.7,
         reviews: 52,
-        description: 'Sleek, silver-polished mirror base that captures every highlight of your room. Modern elegance meets traditional craftsmanship.',
+        description: 'Sleek, silver-polished sheesha base that captures every highlight of your room. Modern elegance meets traditional craftsmanship.',
         image: silverImg,
         bg: product3_bg,
         type: 'Hookah',
         features: [
-            'Silver Mirror Finish',
+            'Silver Sheesha Finish',
             'Polished Perfection',
             'Modern Design',
             'High-Quality Materials',
@@ -238,7 +268,7 @@ export const allProducts = [
         specifications: {
             'Height': '24 inches',
             'Material': 'Stainless Steel & Glass',
-            'Finish': 'Silver Mirror',
+            'Finish': 'Silver Sheesha',
             'Hose Length': '72 inches',
             'Bowl Type': 'Premium Ceramic'
         }
@@ -256,7 +286,7 @@ export const allProducts = [
         bg: product4_bg,
         type: 'Hookah',
         features: [
-            'Gold Mirror Finish',
+            'Gold Sheesha Finish',
             'Luxurious Design',
             'Premium Craftsmanship',
             'Royal Appearance',
@@ -266,7 +296,7 @@ export const allProducts = [
         specifications: {
             'Height': '26 inches',
             'Material': 'Stainless Steel & Glass',
-            'Finish': 'Gold Mirror',
+            'Finish': 'Gold Sheesha',
             'Hose Length': '72 inches',
             'Bowl Type': 'Premium Ceramic'
         }
@@ -284,7 +314,7 @@ export const allProducts = [
         bg: product5_bg,
         type: 'Hookah',
         features: [
-            'Dual-Tone Mirror Finish',
+            'Dual-Tone Sheesha Finish',
             'Unique Design',
             'Artistic Craftsmanship',
             'Premium Materials',
@@ -294,7 +324,7 @@ export const allProducts = [
         specifications: {
             'Height': '28 inches',
             'Material': 'Stainless Steel & Glass',
-            'Finish': 'Silver & Gold Mirror',
+            'Finish': 'Silver & Gold Sheesha',
             'Hose Length': '72 inches',
             'Bowl Type': 'Premium Ceramic'
         }
@@ -311,8 +341,9 @@ export const allProducts = [
         image: emeraldImg,
         bg: product1_bg,
         type: 'Hookah',
+        is_out_of_stock: true,
         features: [
-            'Emerald Mirror Finish',
+            'Emerald Sheesha Finish',
             'Nature-Inspired Design',
             'Premium Quality',
             'Mystical Appearance',
@@ -322,7 +353,7 @@ export const allProducts = [
         specifications: {
             'Height': '25 inches',
             'Material': 'Stainless Steel & Glass',
-            'Finish': 'Emerald Mirror',
+            'Finish': 'Emerald Sheesha',
             'Hose Length': '72 inches',
             'Bowl Type': 'Premium Ceramic'
         }
